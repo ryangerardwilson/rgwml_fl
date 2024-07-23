@@ -1,7 +1,7 @@
 name: rgwml_fl
-description: A new Flutter package project.
-version: 0.0.1
-homepage:
+description: A package for the RGWML techstack
+version: 0.0.2
+homepage: https://github.com/ryangerardwilson/rgwml_fl.git
 
 environment:
   sdk: ">=2.15.0 <3.0.0"
