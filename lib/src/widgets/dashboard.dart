@@ -1,7 +1,10 @@
+import 'dart:async'; // Add this for StreamSubscription
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
+import 'settings.dart';
 
 class CRMDashboard extends StatefulWidget {
   final String title;
@@ -29,11 +32,15 @@ class _CRMDashboardState extends State<CRMDashboard> {
   bool _updateAvailable = false;
   String? _updateUrl;
   String _latestVersion = "";
+  double _latitude = 0.0;
+  double _longitude = 0.0;
+  StreamSubscription<LocationData>? _locationSubscription;
 
   @override
   void initState() {
     super.initState();
     checkForUpdate();
+    _listenForLocationUpdates();
   }
 
   Future<void> checkForUpdate() async {
@@ -63,26 +70,25 @@ class _CRMDashboardState extends State<CRMDashboard> {
     }
   }
 
-bool compareVersions(String latestVersion, String currentVersion) {
-  List<int> latest = latestVersion.split('.').map(int.parse).toList();
-  List<int> current = currentVersion.split('.').map(int.parse).toList();
+  bool compareVersions(String latestVersion, String currentVersion) {
+    List<int> latest = latestVersion.split('.').map(int.parse).toList();
+    List<int> current = currentVersion.split('.').map(int.parse).toList();
 
-  int maxLength = latest.length > current.length ? latest.length : current.length;
+    int maxLength = latest.length > current.length ? latest.length : current.length;
 
-  for (int i = 0; i < maxLength; i++) {
-    int latestSegment = (i < latest.length) ? latest[i] : 0;
-    int currentSegment = (i < current.length) ? current[i] : 0;
+    for (int i = 0; i < maxLength; i++) {
+      int latestSegment = (i < latest.length) ? latest[i] : 0;
+      int currentSegment = (i < current.length) ? current[i] : 0;
 
-    if (latestSegment > currentSegment) {
-      return true;
-    } else if (latestSegment < currentSegment) {
-      return false;
+      if (latestSegment > currentSegment) {
+        return true;
+      } else if (latestSegment < currentSegment) {
+        return false;
+      }
     }
+
+    return false;
   }
-
-  return false;
-}
-
 
   void showSnack(String text) {
     if (_scaffoldKey.currentContext != null) {
@@ -91,17 +97,39 @@ bool compareVersions(String latestVersion, String currentVersion) {
     }
   }
 
-  Future<void> _launchInBrowser(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      showSnack("Could not launch $url");
+  Future<void> _listenForLocationUpdates() async {
+    final Location location = Location();
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
     }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationSubscription = location.onLocationChanged.listen((LocationData currentLocation) {
+      setState(() {
+        _latitude = currentLocation.latitude!;
+        _longitude = currentLocation.longitude!;
+      });
+    });
   }
 
-  void openUpdateLink() {
-    if (_updateUrl != null) {
-      _launchInBrowser(_updateUrl!);
-    }
+  @override
+  void dispose() {
+    _locationSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -110,43 +138,38 @@ bool compareVersions(String latestVersion, String currentVersion) {
       key: _scaffoldKey,
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(
+          widget.title,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings, color: Colors.white),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return SettingsDialog(
+                    username: widget.username,
+                    userId: widget.userId,
+                    currentVersion: widget.currentVersion,
+                    updateAvailable: _updateAvailable,
+                    latestVersion: _latestVersion,
+                    updateUrl: _updateUrl,
+                    locationStream: Location.instance.onLocationChanged,
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_updateAvailable)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: openUpdateLink,
-                  child: Text('Update from v${widget.currentVersion} to v$_latestVersion'),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                'Welcome, ${widget.username} (ID: ${widget.userId})',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                'Current Version: ${widget.currentVersion}',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                'Latest Version: $_latestVersion',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
             Expanded(
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
