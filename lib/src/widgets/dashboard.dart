@@ -1,10 +1,10 @@
-import 'dart:async'; // Add this for StreamSubscription
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'dart:convert';
 import 'settings.dart';
+import 'dashboard_view.dart';
 
 class CRMDashboard extends StatefulWidget {
   final String title;
@@ -43,7 +43,9 @@ class _CRMDashboardState extends State<CRMDashboard> {
     _listenForLocationUpdates();
   }
 
+
   Future<void> checkForUpdate() async {
+    // Your existing version-checking logic
     try {
       final response = await http.get(Uri.parse(widget.versionUrl));
       if (response.statusCode == 200) {
@@ -70,23 +72,23 @@ class _CRMDashboardState extends State<CRMDashboard> {
     }
   }
 
+
+
+
   bool compareVersions(String latestVersion, String currentVersion) {
     List<int> latest = latestVersion.split('.').map(int.parse).toList();
     List<int> current = currentVersion.split('.').map(int.parse).toList();
-
     int maxLength = latest.length > current.length ? latest.length : current.length;
 
     for (int i = 0; i < maxLength; i++) {
       int latestSegment = (i < latest.length) ? latest[i] : 0;
       int currentSegment = (i < current.length) ? current[i] : 0;
-
       if (latestSegment > currentSegment) {
         return true;
       } else if (latestSegment < currentSegment) {
         return false;
       }
     }
-
     return false;
   }
 
@@ -134,67 +136,37 @@ class _CRMDashboardState extends State<CRMDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text(
-          widget.title,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.black,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return SettingsDialog(
-                    username: widget.username,
-                    userId: widget.userId,
-                    currentVersion: widget.currentVersion,
-                    updateAvailable: _updateAvailable,
-                    latestVersion: _latestVersion,
-                    updateUrl: _updateUrl,
-                    locationStream: Location.instance.onLocationChanged,
-                  );
-                },
-              );
-            },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 3 / 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: widget.cardTitles.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    color: Colors.grey[850],
-                    child: Center(
-                      child: Text(
-                        widget.cardTitles[index],
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+    return DashboardView(
+      scaffoldKey: _scaffoldKey,
+      title: widget.title,
+      username: widget.username,
+      userId: widget.userId,
+      cardTitles: widget.cardTitles,
+      currentVersion: widget.currentVersion,
+      updateAvailable: _updateAvailable,
+      latestVersion: _latestVersion,
+      updateUrl: _updateUrl,
+      latitude: _latitude,
+      longitude: _longitude,
+      onSettingsPressed: _openSettings,
+    );
+  }
+
+  Future<void> _openSettings(BuildContext context) async {
+    await checkForUpdate(); // Ensure the latest data is fetched
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SettingsDialog(
+          username: widget.username,
+          userId: widget.userId,
+          currentVersion: widget.currentVersion,
+          updateAvailable: _updateAvailable,
+          latestVersion: _latestVersion,
+          updateUrl: _updateUrl,
+          locationStream: Location.instance.onLocationChanged,
+        );
+      },
     );
   }
 }
