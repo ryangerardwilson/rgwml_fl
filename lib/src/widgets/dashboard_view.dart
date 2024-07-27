@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:location/location.dart';
-import 'settings.dart';
 
 class DashboardView extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
