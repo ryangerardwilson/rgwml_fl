@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'crontab.dart';
 import 'settings.dart';
 import 'dashboard_view.dart';
 
@@ -35,17 +37,18 @@ class _CRMDashboardState extends State<CRMDashboard> {
   double _latitude = 0.0;
   double _longitude = 0.0;
   StreamSubscription<LocationData>? _locationSubscription;
+  bool _isSettingsDialogOpen = false; 
 
   @override
   void initState() {
     super.initState();
-    checkForUpdate();
+    Crontab().scheduleJob('checkForUpdate', Duration(hours: 1), checkForUpdate);
     _listenForLocationUpdates();
   }
 
-
   Future<void> checkForUpdate() async {
-    // Your existing version-checking logic
+    print('Executing checkForUpdate Job');
+    
     try {
       final response = await http.get(Uri.parse(widget.versionUrl));
       if (response.statusCode == 200) {
@@ -59,6 +62,9 @@ class _CRMDashboardState extends State<CRMDashboard> {
             _latestVersion = latestVersion;
             _updateUrl = apkUrl;
           });
+          if (!_isSettingsDialogOpen) {
+            _openSettings(context);
+          }
         } else {
           setState(() {
             _latestVersion = latestVersion;
@@ -71,9 +77,6 @@ class _CRMDashboardState extends State<CRMDashboard> {
       showSnack("Error: $e");
     }
   }
-
-
-
 
   bool compareVersions(String latestVersion, String currentVersion) {
     List<int> latest = latestVersion.split('.').map(int.parse).toList();
@@ -131,6 +134,7 @@ class _CRMDashboardState extends State<CRMDashboard> {
   @override
   void dispose() {
     _locationSubscription?.cancel();
+    Crontab().cancelJob('checkForUpdate');
     super.dispose();
   }
 
@@ -153,7 +157,10 @@ class _CRMDashboardState extends State<CRMDashboard> {
   }
 
   Future<void> _openSettings(BuildContext context) async {
-    await checkForUpdate(); // Ensure the latest data is fetched
+    await checkForUpdate();
+    setState(() {
+      _isSettingsDialogOpen = true;
+    });
     showDialog(
       context: context,
       builder: (context) {
@@ -167,7 +174,11 @@ class _CRMDashboardState extends State<CRMDashboard> {
           locationStream: Location.instance.onLocationChanged,
         );
       },
-    );
+    ).then((_) {
+      setState(() {
+        _isSettingsDialogOpen = false;
+      });
+    });
   }
 }
 

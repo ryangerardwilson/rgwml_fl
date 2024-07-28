@@ -113,13 +113,14 @@ class _SettingsDialogState extends State<SettingsDialog> {
         ],
       ),
       actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            'Close',
-            style: TextStyle(color: Colors.teal),
+        if (!widget.updateAvailable) // Only show the close button if no update is available
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: TextStyle(color: Colors.teal),
+            ),
           ),
-        ),
       ],
     );
   }
