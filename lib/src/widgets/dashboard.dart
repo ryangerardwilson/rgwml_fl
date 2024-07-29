@@ -1,134 +1,61 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'crontab.dart';
-import 'settings.dart';
 import 'dashboard_view.dart';
+import 'login.dart';
+import 'dashboard_utils.dart';
+import 'crontab.dart';
+
 
 class CRMDashboard extends StatefulWidget {
   final String title;
-  final String username;
-  final String userId;
   final List<String> cardTitles;
   final String versionUrl;
   final String currentVersion;
-
+  final String apiHost;
+  
   CRMDashboard({
     required this.title,
-    required this.username,
-    required this.userId,
     required this.cardTitles,
     required this.versionUrl,
     required this.currentVersion,
+    required this.apiHost,
   });
 
   @override
   _CRMDashboardState createState() => _CRMDashboardState();
 }
 
-class _CRMDashboardState extends State<CRMDashboard> {
-  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   bool _updateAvailable = false;
   String? _updateUrl;
   String _latestVersion = "";
   double _latitude = 0.0;
   double _longitude = 0.0;
   StreamSubscription<LocationData>? _locationSubscription;
-  bool _isSettingsDialogOpen = false; 
+  bool _isSettingsDialogOpen = false;
+  String? _username;
+  String? _userId;
+  bool _isAuthenticated = false;
 
   @override
   void initState() {
     super.initState();
-    Crontab().scheduleJob('checkForUpdate', Duration(hours: 1), checkForUpdate);
-    _listenForLocationUpdates();
-  }
-
-  Future<void> checkForUpdate() async {
-    print('Executing checkForUpdate Job');
-    
-    try {
-      final response = await http.get(Uri.parse(widget.versionUrl));
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        final latestVersion = jsonResponse['version'];
-        final apkUrl = jsonResponse['apk_url'];
-
-        if (compareVersions(latestVersion, widget.currentVersion)) {
-          setState(() {
-            _updateAvailable = true;
-            _latestVersion = latestVersion;
-            _updateUrl = apkUrl;
-          });
-          if (!_isSettingsDialogOpen) {
-            _openSettings(context);
-          }
-        } else {
-          setState(() {
-            _latestVersion = latestVersion;
-          });
-        }
-      } else {
-        showSnack("Failed to check for updates.");
-      }
-    } catch (e) {
-      showSnack("Error: $e");
-    }
-  }
-
-  bool compareVersions(String latestVersion, String currentVersion) {
-    List<int> latest = latestVersion.split('.').map(int.parse).toList();
-    List<int> current = currentVersion.split('.').map(int.parse).toList();
-    int maxLength = latest.length > current.length ? latest.length : current.length;
-
-    for (int i = 0; i < maxLength; i++) {
-      int latestSegment = (i < latest.length) ? latest[i] : 0;
-      int currentSegment = (i < current.length) ? current[i] : 0;
-      if (latestSegment > currentSegment) {
-        return true;
-      } else if (latestSegment < currentSegment) {
-        return false;
-      }
-    }
-    return false;
-  }
-
-  void showSnack(String text) {
-    if (_scaffoldKey.currentContext != null) {
-      ScaffoldMessenger.of(_scaffoldKey.currentContext!)
-          .showSnackBar(SnackBar(content: Text(text)));
-    }
-  }
-
-  Future<void> _listenForLocationUpdates() async {
-    final Location location = Location();
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        return;
-      }
-    }
-
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    _locationSubscription = location.onLocationChanged.listen((LocationData currentLocation) {
+    checkAuthentication(context, widget, onAuthentication: (username, userId) {
       setState(() {
-        _latitude = currentLocation.latitude!;
-        _longitude = currentLocation.longitude!;
+        _username = username;
+        _userId = userId;
+        _isAuthenticated = true;
       });
     });
+    Crontab().scheduleJob('checkForUpdate', Duration(hours: 1), checkForUpdate);
+    initLocationUpdates((latitude, longitude) {
+      setState(() {
+        _latitude = latitude;
+        _longitude = longitude;
+      });
+    }).then((sub) => _locationSubscription = sub);
   }
 
   @override
@@ -140,11 +67,17 @@ class _CRMDashboardState extends State<CRMDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    if (_username == null || _userId == null) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return DashboardView(
       scaffoldKey: _scaffoldKey,
       title: widget.title,
-      username: widget.username,
-      userId: widget.userId,
+      username: _username!,
+      userId: _userId!,
       cardTitles: widget.cardTitles,
       currentVersion: widget.currentVersion,
       updateAvailable: _updateAvailable,
@@ -152,7 +85,34 @@ class _CRMDashboardState extends State<CRMDashboard> {
       updateUrl: _updateUrl,
       latitude: _latitude,
       longitude: _longitude,
-      onSettingsPressed: _openSettings,
+      onSettingsPressed: (context) => _openSettings(context),
+    );
+  }
+
+  Future<void> checkForUpdate() async {
+    print('Executing checkForUpdate Job');
+    await checkForAppUpdate(
+      versionUrl: widget.versionUrl,
+      currentVersion: widget.currentVersion,
+      context: context,
+      onUpdateAvailable: (latestVersion, updateUrl) {
+        setState(() {
+          _updateAvailable = true;
+          _latestVersion = latestVersion;
+          _updateUrl = updateUrl;
+        });
+        if (!_isSettingsDialogOpen) {
+          _openSettings(context);
+        }
+      },
+      onLatestVersionFetched: (latestVersion) {
+        setState(() {
+          _latestVersion = latestVersion;
+        });
+      },
+      onError: (message) {
+        showSnack(_scaffoldKey, message);
+      },
     );
   }
 
@@ -161,24 +121,38 @@ class _CRMDashboardState extends State<CRMDashboard> {
     setState(() {
       _isSettingsDialogOpen = true;
     });
-    showDialog(
+    showSettingsDialog(
       context: context,
-      builder: (context) {
-        return SettingsDialog(
-          username: widget.username,
-          userId: widget.userId,
-          currentVersion: widget.currentVersion,
-          updateAvailable: _updateAvailable,
-          latestVersion: _latestVersion,
-          updateUrl: _updateUrl,
-          locationStream: Location.instance.onLocationChanged,
-        );
-      },
+      username: _username ?? 'N/A',
+      userId: _userId ?? 'N/A',
+      currentVersion: widget.currentVersion,
+      updateAvailable: _updateAvailable,
+      latestVersion: _latestVersion,
+      updateUrl: _updateUrl,
+      locationStream: Location.instance.onLocationChanged,
+      isAuthenticated: _isAuthenticated,
+      onLogout: () => _logout(context),
     ).then((_) {
       setState(() {
         _isSettingsDialogOpen = false;
       });
     });
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    await logoutUser();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginPage(
+          apiHost: widget.apiHost,
+          title: widget.title,
+          cardTitles: widget.cardTitles,
+          versionUrl: widget.versionUrl,
+          currentVersion: widget.currentVersion,
+        ),
+      ),
+    );
   }
 }
 

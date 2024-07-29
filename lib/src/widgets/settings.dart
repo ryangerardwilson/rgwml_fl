@@ -11,6 +11,8 @@ class SettingsDialog extends StatefulWidget {
   final String latestVersion;
   final String? updateUrl;
   final Stream<LocationData> locationStream;
+  final bool isAuthenticated;
+  final Future<void> Function() logout;
 
   SettingsDialog({
     required this.username,
@@ -20,6 +22,8 @@ class SettingsDialog extends StatefulWidget {
     required this.latestVersion,
     required this.updateUrl,
     required this.locationStream,
+    required this.isAuthenticated,
+    required this.logout,
   });
 
   @override
@@ -59,61 +63,76 @@ class _SettingsDialogState extends State<SettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Colors.grey[900],
-      title: Text(
-        'Settings',
-        style: TextStyle(color: Colors.white),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Logged in as: ${widget.username}',
-            style: TextStyle(color: Colors.white70),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'User ID: ${widget.userId}',
-            style: TextStyle(color: Colors.white70),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Current Version: ${widget.currentVersion}',
-            style: TextStyle(color: Colors.white70),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Latest Version: ${widget.latestVersion}',
-            style: TextStyle(color: Colors.white70),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Latitude: ${_latitude ?? 'loading...'}',
-            style: TextStyle(color: Colors.white70),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Longitude: ${_longitude ?? 'loading...'}',
-            style: TextStyle(color: Colors.white70),
-          ),
-          SizedBox(height: 16),
-          if (widget.updateAvailable)
-            ElevatedButton(
-              onPressed: () {
-                if (widget.updateUrl != null) {
-                  _launchInBrowser(widget.updateUrl!, context);
-                }
-              },
-              child: Text('Update to v${widget.latestVersion}'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
+    return WillPopScope(
+      onWillPop: () async => false,
+      // Prevent back button press regardless of update availability
+      child: AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          'Settings',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Logged in as: ${widget.username}',
+                style: TextStyle(color: Colors.white70),
               ),
-            ),
-        ],
-      ),
-      actions: <Widget>[
-        if (!widget.updateAvailable) // Only show the close button if no update is available
+              SizedBox(height: 8),
+              Text(
+                'User ID: ${widget.userId}',
+                style: TextStyle(color: Colors.white70),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Current Version: ${widget.currentVersion}',
+                style: TextStyle(color: Colors.white70),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Latest Version: ${widget.latestVersion}',
+                style: TextStyle(color: Colors.white70),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Latitude: ${_latitude ?? 'loading...'}',
+                style: TextStyle(color: Colors.white70),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Longitude: ${_longitude ?? 'loading...'}',
+                style: TextStyle(color: Colors.white70),
+              ),
+              SizedBox(height: 16),
+              if (widget.updateAvailable)
+                ElevatedButton(
+                  onPressed: () {
+                    if (widget.updateUrl != null) {
+                      _launchInBrowser(widget.updateUrl!, context);
+                    }
+                  },
+                  child: Text('Update to v${widget.latestVersion}'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                  ),
+                ),
+              if (widget.isAuthenticated)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: ElevatedButton(
+                    onPressed: () => widget.logout(),
+                    child: Text('Logout'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
@@ -121,7 +140,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
               style: TextStyle(color: Colors.teal),
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 }
