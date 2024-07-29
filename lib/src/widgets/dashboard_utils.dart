@@ -102,9 +102,10 @@ mixin DashboardUtils {
           builder: (context) => LoginPage(
             apiHost: widget.apiHost,
             title: widget.title,
-            cardTitles: widget.cardTitles,
+            //cardTitles: widget.cardTitles,
             versionUrl: widget.versionUrl,
             currentVersion: widget.currentVersion,
+            modalConfig: widget.modalConfig,
           ),
         )
       );

@@ -3,20 +3,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dashboard.dart'; // Ensure this path is correct
+import '../modal_config.dart'; // Ensure this path is correct
 
 class LoginPage extends StatefulWidget {
   final String apiHost;
   final String title;
-  final List<String> cardTitles;
+  //final List<String> cardTitles;
   final String versionUrl;
   final String currentVersion;
+  final ModalConfigMap modalConfig; // Add this parameter
 
   LoginPage({
     required this.apiHost,
     required this.title,
-    required this.cardTitles,
+    //required this.cardTitles,
     required this.versionUrl,
     required this.currentVersion,
+    required this.modalConfig, // Ensure this is a required parameter
   });
 
   @override
@@ -27,23 +30,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = '';
-  //bool _isLoggedIn = false;
-
-  /*
-  @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-  */
-
-  //Future<void> _checkLoginStatus() async {
-    //SharedPreferences prefs = await SharedPreferences.getInstance();
-    //bool isAuthenticated = prefs.getBool('auth') ?? false;
-    //setState(() {
-    //  _isLoggedIn = isAuthenticated;
-    // });
-  //}
 
   Future<void> handleLogin() async {
     final String username = _usernameController.text;
@@ -73,10 +59,11 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(
             builder: (context) => CRMDashboard(
               title: widget.title,
-              cardTitles: widget.cardTitles,
+              //cardTitles: widget.cardTitles,
               versionUrl: widget.versionUrl,
               currentVersion: widget.currentVersion,
               apiHost: widget.apiHost,
+              modalConfig: widget.modalConfig, // Pass modalConfig here
             ),
           ),
         );

@@ -1,25 +1,28 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard_view.dart';
 import 'login.dart';
-import 'dashboard_utils.dart';
 import 'crontab.dart';
-
+import 'dashboard_utils.dart'; // Ensure the correct path
+import '../modal_config.dart'; // Ensure the correct path
 
 class CRMDashboard extends StatefulWidget {
   final String title;
-  final List<String> cardTitles;
+  //final List<String> cardTitles;
   final String versionUrl;
   final String currentVersion;
   final String apiHost;
-  
+  final ModalConfigMap modalConfig; // Add this parameter
+
   CRMDashboard({
     required this.title,
-    required this.cardTitles,
+    //required this.cardTitles,
     required this.versionUrl,
     required this.currentVersion,
     required this.apiHost,
+    required this.modalConfig, // Ensure this is a required parameter
   });
 
   @override
@@ -43,19 +46,33 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
   void initState() {
     super.initState();
     checkAuthentication(context, widget, onAuthentication: (username, userId) {
-      setState(() {
-        _username = username;
-        _userId = userId;
-        _isAuthenticated = true;
-      });
+      if (mounted) {
+        setState(() {
+          _username = username;
+          _userId = userId;
+          _isAuthenticated = true;
+        });
+      }
     });
-    Crontab().scheduleJob('checkForUpdate', Duration(hours: 1), checkForUpdate);
+
+    Crontab().scheduleJob('checkForUpdate', Duration(hours: 1), () async {
+      if (mounted) {
+        await checkForUpdate();
+      }
+    });
+
     initLocationUpdates((latitude, longitude) {
-      setState(() {
-        _latitude = latitude;
-        _longitude = longitude;
-      });
-    }).then((sub) => _locationSubscription = sub);
+      if (mounted) {
+        setState(() {
+          _latitude = latitude;
+          _longitude = longitude;
+        });
+      }
+    }).then((sub) {
+      if (mounted) {
+        _locationSubscription = sub;
+      }
+    });
   }
 
   @override
@@ -78,7 +95,7 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
       title: widget.title,
       username: _username!,
       userId: _userId!,
-      cardTitles: widget.cardTitles,
+      //cardTitles: widget.cardTitles,
       currentVersion: widget.currentVersion,
       updateAvailable: _updateAvailable,
       latestVersion: _latestVersion,
@@ -86,6 +103,8 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
       latitude: _latitude,
       longitude: _longitude,
       onSettingsPressed: (context) => _openSettings(context),
+      modalConfig: widget.modalConfig,
+      apiHost: widget.apiHost,
     );
   }
 
@@ -96,31 +115,40 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
       currentVersion: widget.currentVersion,
       context: context,
       onUpdateAvailable: (latestVersion, updateUrl) {
-        setState(() {
-          _updateAvailable = true;
-          _latestVersion = latestVersion;
-          _updateUrl = updateUrl;
-        });
-        if (!_isSettingsDialogOpen) {
-          _openSettings(context);
+        if (mounted) {
+          setState(() {
+            _updateAvailable = true;
+            _latestVersion = latestVersion;
+            _updateUrl = updateUrl;
+          });
+          if (!_isSettingsDialogOpen) {
+            _openSettings(context);
+          }
         }
       },
       onLatestVersionFetched: (latestVersion) {
-        setState(() {
-          _latestVersion = latestVersion;
-        });
+        if (mounted) {
+          setState(() {
+            _latestVersion = latestVersion;
+          });
+        }
       },
       onError: (message) {
-        showSnack(_scaffoldKey, message);
+        if (mounted) {
+          showSnack(_scaffoldKey, message);
+        }
       },
     );
   }
 
   Future<void> _openSettings(BuildContext context) async {
+    if (!mounted) return; // additional check to ensure widget is still mounted
     await checkForUpdate();
-    setState(() {
-      _isSettingsDialogOpen = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isSettingsDialogOpen = true;
+      });
+    }
     showSettingsDialog(
       context: context,
       username: _username ?? 'N/A',
@@ -133,26 +161,37 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
       isAuthenticated: _isAuthenticated,
       onLogout: () => _logout(context),
     ).then((_) {
-      setState(() {
-        _isSettingsDialogOpen = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSettingsDialogOpen = false;
+        });
+      }
     });
   }
 
-  Future<void> _logout(BuildContext context) async {
-    await logoutUser();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => LoginPage(
-          apiHost: widget.apiHost,
-          title: widget.title,
-          cardTitles: widget.cardTitles,
-          versionUrl: widget.versionUrl,
-          currentVersion: widget.currentVersion,
-        ),
+Future<void> _logout(BuildContext context) async {
+  await logoutUser();
+  
+  // Clear the SharedPreferences to remove stored authentication data
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (context) => LoginPage(
+        apiHost: widget.apiHost,
+        title: widget.title,
+        //cardTitles: widget.cardTitles,
+        versionUrl: widget.versionUrl,
+        currentVersion: widget.currentVersion,
+        modalConfig: widget.modalConfig,
       ),
-    );
-  }
+    ),
+    (Route<dynamic> route) => false, // This removes all previous routes
+  );
+}
+
+
 }
 
