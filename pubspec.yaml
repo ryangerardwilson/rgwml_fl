@@ -1,6 +1,6 @@
 name: rgwml_fl
 description: A package for the RGWML techstack
-version: 0.0.19
+version: 0.0.20
 homepage: https://github.com/ryangerardwilson/rgwml_fl.git
 
 environment:
@@ -14,6 +14,7 @@ dependencies:
   url_launcher: ^6.0.17
   location: ^7.0.0
   shared_preferences: ^2.2.3
+  share_plus: ^10.0.0
 
 dev_dependencies:
   flutter_test:
