@@ -1,10 +1,10 @@
 name: rgwml_fl
 description: A package for the RGWML techstack
-version: 0.0.18
+version: 0.0.19
 homepage: https://github.com/ryangerardwilson/rgwml_fl.git
 
 environment:
-  sdk: ">=2.15.0 <3.0.0"
+  sdk: ">=2.15.0 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
