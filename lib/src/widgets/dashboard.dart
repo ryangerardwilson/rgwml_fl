@@ -10,7 +10,6 @@ import '../modal_config.dart'; // Ensure the correct path
 
 class CRMDashboard extends StatefulWidget {
   final String title;
-  //final List<String> cardTitles;
   final String versionUrl;
   final String currentVersion;
   final String apiHost;
@@ -18,7 +17,6 @@ class CRMDashboard extends StatefulWidget {
 
   CRMDashboard({
     required this.title,
-    //required this.cardTitles,
     required this.versionUrl,
     required this.currentVersion,
     required this.apiHost,
@@ -32,7 +30,7 @@ class CRMDashboard extends StatefulWidget {
 class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   bool _updateAvailable = false;
-  String? _updateUrl;
+  String _updateUrl = "";
   String _latestVersion = "";
   double _latitude = 0.0;
   double _longitude = 0.0;

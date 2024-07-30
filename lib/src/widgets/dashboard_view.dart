@@ -11,7 +11,7 @@ class DashboardView extends StatefulWidget {
   final String currentVersion;
   final bool updateAvailable;
   final String latestVersion;
-  final String? updateUrl;
+  final String updateUrl;
   final double latitude;
   final double longitude;
   final void Function(BuildContext) onSettingsPressed;
@@ -26,7 +26,7 @@ class DashboardView extends StatefulWidget {
     required this.currentVersion,
     required this.updateAvailable,
     required this.latestVersion,
-    this.updateUrl,
+    required this.updateUrl,
     required this.latitude,
     required this.longitude,
     required this.onSettingsPressed,
@@ -185,6 +185,9 @@ Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<St
                         readFields: widget.modalConfig.configs[modalKey]!.scopes.read,
                         updateFields: widget.modalConfig.configs[modalKey]!.scopes.update,
                         delete: widget.modalConfig.configs[modalKey]!.scopes.delete,
+                        options: widget.modalConfig.configs[modalKey]!.options,
+                        conditionalOptions: widget.modalConfig.configs[modalKey]!.conditionalOptions,
+                        validationRules: widget.modalConfig.configs[modalKey]!.validationRules,
                       ),
                     ),
                   ),

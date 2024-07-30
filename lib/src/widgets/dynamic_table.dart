@@ -1,7 +1,11 @@
+// dynamic_table.dart
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dynamic_table_searchable_data_view.dart';
+import 'dynamic_table_create_dialog.dart';
+import '../modal_config.dart';
+
 
 // Define a function to fetch data from the API
 Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, String route) async {
@@ -46,6 +50,10 @@ class DynamicTable extends StatefulWidget {
   final List<String> readFields;
   final List<String> updateFields;
   final bool delete;
+  final Options options;
+  final Map<String, List<ConditionalOption>> conditionalOptions;
+  final Map<String, List<String>> validationRules;
+
 
   DynamicTable({
     required this.apiHost,
@@ -54,7 +62,10 @@ class DynamicTable extends StatefulWidget {
     required this.create,
     required this.readFields,
     required this.updateFields,
-    required this.delete
+    required this.delete,
+    required this.options,
+    required this.conditionalOptions,
+    required this.validationRules,
   });
 
   @override
@@ -107,79 +118,123 @@ class _DynamicTableState extends State<DynamicTable> {
     }
   }
 
+  void _showCreateDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return DynamicTableCreateDialog(
+          apiHost: widget.apiHost,
+          modal: widget.modal,
+          columns: widget.readFields,
+          options: widget.options,
+          conditionalOptions: widget.conditionalOptions,
+          validationRules: widget.validationRules
+        );
+      },
+    ).then((_) {
+      // Refresh data after closing the create dialog
+      setState(() {
+        fetchData(widget.apiHost, widget.modal, widget.route);
+      });
+    });
+  }
+
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String queryInput = '';
+        return AlertDialog(
+          title: Text('Search', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.black,
+          content: TextField(
+            onChanged: (value) {
+              queryInput = value;
+            },
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Enter search query',
+              hintStyle: TextStyle(color: Colors.white60),
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.blue),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel', style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Search', style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                handleSearchSubmit(widget.apiHost, widget.modal, queryInput);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         color: Colors.black, // Set background color to black
-        child: SearchableDataView(
-          apiHost: widget.apiHost,
-          modal: widget.modal,
-          route: widget.route,
-          create: widget.create,
-          readFields: widget.readFields,
-          updateFields: widget.updateFields,
-          delete: widget.delete,
-          searchData: _searchData,
-          queryError: _queryError,
-          handleSearchSubmit: handleSearchSubmit,
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              String queryInput = '';
-              return AlertDialog(
-                title: Text('Search', style: TextStyle(color: Colors.white)),
-                backgroundColor: Colors.black,
-                content: TextField(
-                  onChanged: (value) {
-                    queryInput = value;
-                  },
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Enter search query',
-                    hintStyle: TextStyle(color: Colors.white60),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue),
-                    ),
+        child: Column(
+          children: [
+            Expanded(
+              child: SearchableDataView(
+                apiHost: widget.apiHost,
+                modal: widget.modal,
+                route: widget.route,
+                create: widget.create,
+                readFields: widget.readFields,
+                updateFields: widget.updateFields,
+                delete: widget.delete,
+                searchData: _searchData,
+                queryError: _queryError,
+                handleSearchSubmit: handleSearchSubmit,
+              ),
+            ),
+            SizedBox(height: 16), // Space between the table and the buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FloatingActionButton(
+                  onPressed: _showCreateDialog,
+                  child: Icon(Icons.add, color: Colors.white),
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(color: Colors.white, width: 2.0),
+                    borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
-                actions: [
-                  TextButton(
-                    child: Text('Cancel', style: TextStyle(color: Colors.white)),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                SizedBox(width: 16), // Space between the buttons
+                FloatingActionButton(
+                  onPressed: _showSearchDialog,
+                  child: Icon(Icons.search, color: Colors.white),
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(color: Colors.white, width: 2.0),
+                    borderRadius: BorderRadius.circular(8.0),
                   ),
-                  TextButton(
-                    child: Text('Search', style: TextStyle(color: Colors.white)),
-                    onPressed: () {
-                      handleSearchSubmit(widget.apiHost, widget.modal, queryInput);
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              );
-            },
-          );
-        },
-        child: Icon(Icons.search, color: Colors.white),
-        backgroundColor: Colors.black,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.white, width: 2.0),
-          borderRadius: BorderRadius.circular(8.0),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       bottomNavigationBar: _queryError != null ? BottomAppBar(
         child: Text(_queryError!, style: TextStyle(color: Colors.red)),
       ) : null,
