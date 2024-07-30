@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-//import 'package:url_launcher/url_launcher.dart';
-//import 'dynamic_table_data_list.dart';
-//import 'dynamic_table_scrollable_dialog.dart';
 import 'dynamic_table_searchable_data_view.dart';
 
 // Define a function to fetch data from the API
@@ -45,13 +42,19 @@ class DynamicTable extends StatefulWidget {
   final String apiHost;
   final String modal;
   final String route;
+  final bool create;
   final List<String> readFields;
+  final List<String> updateFields;
+  final bool delete;
 
   DynamicTable({
     required this.apiHost,
     required this.modal,
     required this.route,
+    required this.create,
     required this.readFields,
+    required this.updateFields,
+    required this.delete
   });
 
   @override
@@ -113,7 +116,10 @@ class _DynamicTableState extends State<DynamicTable> {
           apiHost: widget.apiHost,
           modal: widget.modal,
           route: widget.route,
+          create: widget.create,
           readFields: widget.readFields,
+          updateFields: widget.updateFields,
+          delete: widget.delete,
           searchData: _searchData,
           queryError: _queryError,
           handleSearchSubmit: handleSearchSubmit,

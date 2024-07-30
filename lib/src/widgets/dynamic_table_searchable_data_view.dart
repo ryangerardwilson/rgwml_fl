@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dynamic_table_data_list.dart';
 
-class SearchableDataView extends StatelessWidget {
+class SearchableDataView extends StatefulWidget {
   final String apiHost;
   final String modal;
   final String route;
+  final bool create;
   final List<String> readFields;
+  final List<String> updateFields;
+  final bool delete;
   final List<Map<String, dynamic>> searchData;
   final String? queryError;
   final Function handleSearchSubmit;
@@ -16,16 +19,68 @@ class SearchableDataView extends StatelessWidget {
     required this.apiHost,
     required this.modal,
     required this.route,
+    required this.create,
     required this.readFields,
+    required this.updateFields,
+    required this.delete,
     required this.searchData,
     required this.queryError,
     required this.handleSearchSubmit,
   });
 
   @override
+  _SearchableDataViewState createState() => _SearchableDataViewState();
+}
+
+class _SearchableDataViewState extends State<SearchableDataView> {
+  late Future<List<Map<String, dynamic>>> _fetchDataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDataFuture = fetchData();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchData() async {
+    final apiUrl = '${widget.apiHost}read/${widget.modal}/${widget.route}';
+    print('API URL: $apiUrl');
+
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+      print('API Response: ${response.statusCode} - ${response.body}');
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+
+        if (result.containsKey('columns') && result.containsKey('data')) {
+          List<String> columns = List<String>.from(result['columns']);
+          List<List<dynamic>> data = List<List<dynamic>>.from(result['data']);
+
+          return data.map((row) {
+            return Map<String, dynamic>.fromIterables(columns, row);
+          }).toList();
+        } else {
+          throw Exception('Unexpected API Response format');
+        }
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      print('Error: $e');
+      return [];
+    }
+  }
+
+  void _refreshData() {
+    setState(() {
+      _fetchDataFuture = fetchData();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: fetchData(apiHost, modal, route), // Update to send correct fetchData method
+      future: _fetchDataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -46,28 +101,34 @@ class SearchableDataView extends StatelessWidget {
             ),
           );
         } else {
-          final data = searchData.isNotEmpty ? searchData : snapshot.data!;
+          final data = widget.searchData.isNotEmpty ? widget.searchData : snapshot.data!;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  'Filter: $route', // Display the name of the route
+                  'Filter: ${widget.route}',
                   style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
-                  'Rows Fetched: ${data.length}', // Display the count of data rows
+                  'Rows Fetched: ${data.length}',
                   style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
               Expanded(
                 child: DataList(
+                  apiHost: widget.apiHost,
+                  modal: widget.modal,
                   data: data,
-                  readFields: readFields,
+                  create: widget.create,
+                  readFields: widget.readFields,
+                  updateFields: widget.updateFields,
+                  delete: widget.delete,
+                  onDeleteItem: _refreshData,
                 ),
               ),
             ],
@@ -75,40 +136,6 @@ class SearchableDataView extends StatelessWidget {
         }
       },
     );
-  }
-
-  Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, String route) async {
-    final apiUrl = apiHost + 'read/$modal/$route';
-    print('API URL: $apiUrl');
-
-    try {
-      final response = await http.get(Uri.parse(apiUrl));
-      print('API Response: ${response.statusCode} - ${response.body}');
-
-      if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-
-        // Ensuring the result contains the expected keys
-        if (result.containsKey('columns') && result.containsKey('data')) {
-          List<String> columns = List<String>.from(result['columns']);
-          List<List<dynamic>> data = List<List<dynamic>>.from(result['data']);
-
-          // Converting list of lists to list of maps
-          List<Map<String, dynamic>> dataList = data.map((row) {
-            return Map<String, dynamic>.fromIterables(columns, row);
-          }).toList();
-
-          return dataList;
-        } else {
-          throw Exception('Unexpected API Response format');
-        }
-      } else {
-        throw Exception('Failed to load data');
-      }
-    } catch (e) {
-      print('Error: $e');
-      return [];
-    }
   }
 }
 

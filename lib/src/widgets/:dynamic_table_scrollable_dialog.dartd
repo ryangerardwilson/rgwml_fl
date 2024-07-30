@@ -1,30 +1,15 @@
-// dynamic_table_scrollable_dialog.dart 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ScrollableDialog extends StatelessWidget {
-  final String apiHost;
-  final String modal;
   final Map<String, dynamic> item;
   final bool create;
   final List<String> readFields;
   final List<String> updateFields;
   final bool delete;
-  final VoidCallback onDelete;
 
-  ScrollableDialog({
-    required this.apiHost,
-    required this.modal,
-    required this.item,
-    required this.create,
-    required this.readFields,
-    required this.updateFields,
-    required this.delete,
-    required this.onDelete,
-  });
+  ScrollableDialog({required this.item});
 
   Future<void> _launchInBrowser(String url, BuildContext context) async {
     final Uri uri = Uri.parse(url);
@@ -38,42 +23,6 @@ class ScrollableDialog extends StatelessWidget {
   void _shareContent() {
     String content = item.entries.map((entry) => '${entry.key}: ${entry.value}').join('\n');
     Share.share(content);
-  }
-
-  void _deleteItem(BuildContext context) async {
-    final id = item['id']; // Assuming 'id' is the key for item ID
-    final userId = item['user_id']; // Assuming 'user_id' is present in the item map
-    final success = await deleteItemFromAPI(id, userId);
-    if (success) {
-      Navigator.of(context).pop();
-      onDelete(); // Notify the parent widget to remove the item
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete the item.')),
-      );
-    }
-  }
-
-  Future<bool> deleteItemFromAPI(dynamic id, dynamic userId) async {
-    final apiUrl = apiHost + 'delete/$modal/$id';
-    print('DELETE API URL: $apiUrl');
-
-    final url = Uri.parse(apiUrl);
-
-    final response = await http.delete(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'user_id': userId}),
-    );
-
-    if (response.statusCode == 200) {
-      final result = jsonDecode(response.body);
-      return result['status'] == 'success';
-    } else {
-      return false;
-    }
   }
 
   @override
@@ -119,25 +68,36 @@ class ScrollableDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _shareContent,
-          child: Icon(Icons.share, color: Colors.white),
-        ),
-        if (delete)
-          TextButton(
-            onPressed: () => _deleteItem(context),
-            child: Icon(Icons.delete, color: Colors.red),
-          ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            'Close',
-            style: TextStyle(color: Colors.white), // Set text color to white
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: _shareContent,
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.grey[850], // Set button background color to dark grey
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              child: Text(
+                'Share',
+                style: TextStyle(color: Colors.white), // Set text color to white
+              ),
+            ),
+            SizedBox(width: 8), // Adding some spacing between the buttons
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.grey[850], // Set button background color to dark grey
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              child: Text(
+                'Close',
+                style: TextStyle(color: Colors.white), // Set text color to white
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
-
 }
 
