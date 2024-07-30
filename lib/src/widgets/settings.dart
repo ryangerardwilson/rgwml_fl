@@ -113,32 +113,45 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       _launchInBrowser(widget.updateUrl!, context);
                     }
                   },
-                  child: Text('Update to v${widget.latestVersion}'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
+                  child: Text(
+                    'Update to v${widget.latestVersion}',
+                    style: TextStyle(color: Colors.white),
                   ),
-                ),
-              if (widget.isAuthenticated)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: ElevatedButton(
-                    onPressed: () => widget.logout(),
-                    child: Text('Logout'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
                   ),
                 ),
             ],
           ),
         ),
         actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Close',
-              style: TextStyle(color: Colors.teal),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Align to the center
+            children: [
+              if (widget.isAuthenticated)
+                ElevatedButton(
+                  onPressed: () => widget.logout(),
+                  child: Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                  ),
+                ),
+              if (widget.isAuthenticated) // Space between buttons
+                SizedBox(width: 16),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'Close',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.black,
+                ),
+              ),
+            ],
           ),
         ],
       ),

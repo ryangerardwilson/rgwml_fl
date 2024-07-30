@@ -51,6 +51,7 @@ class _LoginPageState extends State<LoginPage> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_id', user['id'].toString());
         await prefs.setString('username', user['username']);
+        await prefs.setString('user_type', user['type']);
         await prefs.setBool('auth', true);
 
         // Navigate to CRMDashboard

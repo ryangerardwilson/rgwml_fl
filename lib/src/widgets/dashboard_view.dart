@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dynamic_table.dart';  // Ensure you have the correct import path
-import '../modal_config.dart'; // Ensure the correct path
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dynamic_table.dart'; 
+import '../modal_config.dart';
 
 class DashboardView extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -39,6 +40,20 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   Map<String, String?> _selectedReadRoute = {};
+  String? _userType;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserType();
+  }
+
+  Future<void> _loadUserType() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userType = prefs.getString('user_type');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +74,7 @@ class _DashboardViewState extends State<DashboardView> {
             onPressed: () => widget.onSettingsPressed(context),
           ),
         ],
+        iconTheme: IconThemeData(color: Colors.grey[300]), // Light grey back arrow
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -70,6 +86,10 @@ class _DashboardViewState extends State<DashboardView> {
                 itemCount: modalKeys.length,
                 itemBuilder: (context, index) {
                   final modalKey = modalKeys[index];
+                  // Do not display the 'users' modal if the user type is not 'admin'
+                  if (modalKey == 'users' && _userType != 'admin') {
+                    return SizedBox.shrink();
+                  }
                   final modal = widget.modalConfig.configs[modalKey];
 
                   if (modal != null) {
@@ -99,11 +119,6 @@ class _DashboardViewState extends State<DashboardView> {
                               Text(
                                 modalKey,
                                 style: TextStyle(color: Colors.white, fontSize: 18),
-                              ),
-                              SizedBox(height: 10),
-                              Text(
-                                'Tap to view details',
-                                style: TextStyle(color: Colors.white70, fontSize: 14),
                               ),
                             ],
                           ),
@@ -160,6 +175,7 @@ Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<St
                           ),
                         ),
                         backgroundColor: Colors.black,
+                        iconTheme: IconThemeData(color: Colors.grey[300]),
                       ),
                       body: DynamicTable(
                         apiHost: widget.apiHost,

@@ -95,7 +95,6 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
       title: widget.title,
       username: _username!,
       userId: _userId!,
-      //cardTitles: widget.cardTitles,
       currentVersion: widget.currentVersion,
       updateAvailable: _updateAvailable,
       latestVersion: _latestVersion,
@@ -182,7 +181,6 @@ Future<void> _logout(BuildContext context) async {
       builder: (context) => LoginPage(
         apiHost: widget.apiHost,
         title: widget.title,
-        //cardTitles: widget.cardTitles,
         versionUrl: widget.versionUrl,
         currentVersion: widget.currentVersion,
         modalConfig: widget.modalConfig,
