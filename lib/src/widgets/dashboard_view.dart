@@ -86,8 +86,8 @@ class _DashboardViewState extends State<DashboardView> {
                 itemCount: modalKeys.length,
                 itemBuilder: (context, index) {
                   final modalKey = modalKeys[index];
-                  // Do not display the 'users' modal if the user type is not 'admin'
-                  if (modalKey == 'users' && _userType != 'admin') {
+                  // Do not display the 'users' modal if the user type is 'normal'
+                  if (modalKey == 'users' && _userType == 'normal') {
                     return SizedBox.shrink();
                   }
                   final modal = widget.modalConfig.configs[modalKey];
