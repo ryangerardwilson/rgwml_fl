@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'modal_config.dart';
-import 'xoror.dart';
 import 'validator.dart';
 import 'ai_validator.dart';
+import 'xoror_edit.dart';
 
 class DynamicTableEditDialog extends StatefulWidget {
   final String apiHost;
@@ -51,10 +51,8 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
 
   void _handleUpdate() async {
     try {
-      // Equivalent to aggregating relevant fields and adding 'user_id'
       _formData['user_id'] = widget.userId;
 
-      // Send the PUT request
       final response = await http.put(
         Uri.parse('${widget.apiHost}update/${widget.modal}/${widget.item['id']}'),
         headers: {'Content-Type': 'application/json'},
@@ -66,7 +64,7 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Record updated successfully')),
         );
-        Navigator.of(context).pop(true); // Return true to indicate success
+        Navigator.of(context).pop(true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update record')),
@@ -169,6 +167,7 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
           return XorOrSelector(
             options: conditionalOption.options,
             isXor: true,
+            preselected: _formData[column]?.toString(),
             columnName: column,
             onSelectionChanged: (selectedValue) {
               setState(() { _formData[column] = selectedValue; });
@@ -191,6 +190,7 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
         return XorOrSelector(
           options: xorOptions,
           isXor: true,
+          preselected: _formData[column]?.toString(),
           columnName: column,
           onSelectionChanged: (selectedValue) {
             setState(() { _formData[column] = selectedValue; });
@@ -200,6 +200,7 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
         return XorOrSelector(
           options: orOptions,
           isXor: false,
+          preselected: _formData[column]?.toString(),
           columnName: column,
           onSelectionChanged: (selectedValue) {
             setState(() { _formData[column] = selectedValue; });

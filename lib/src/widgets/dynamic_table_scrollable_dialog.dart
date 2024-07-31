@@ -4,9 +4,6 @@ import 'dart:convert';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'modal_config.dart';
-import 'xoror.dart';
-import 'validator.dart';
-import 'ai_validator.dart';
 import 'dynamic_table_edit_dialog.dart'; // Import the edit dialog file.
 
 class ScrollableDialog extends StatelessWidget {
