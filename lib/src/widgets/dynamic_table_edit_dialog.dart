@@ -181,8 +181,32 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
     }
   }
 
+  Widget _buildNonEditableField(String column) {
+    return TextFormField(
+      initialValue: _formData[column]?.toString() ?? '',
+      decoration: InputDecoration(
+        labelText: column,
+        labelStyle: TextStyle(color: Colors.white),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        filled: true,
+        fillColor: Colors.black,
+      ),
+      style: TextStyle(color: Colors.grey[850]),
+      enabled: false,
+    );
+  }
+
   List<Widget> _buildFormFields() {
-    return widget.updateFields.map((column) {
+    return widget.columns.map((column) {
+      if (!widget.updateFields.contains(column)) {
+        return _buildNonEditableField(column);
+      }
+
       final xorOptions = widget.options.xorOptions[column];
       final orOptions = widget.options.orOptions[column];
 
@@ -253,4 +277,6 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
     );
   }
 }
+
+
 
