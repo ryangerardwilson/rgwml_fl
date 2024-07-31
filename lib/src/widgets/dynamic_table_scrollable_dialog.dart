@@ -1,4 +1,3 @@
-// dynamic_table_scrollable_dialog.dart 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -6,9 +5,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'modal_config.dart';
 import 'xoror.dart';
-import 'validator.dart'; 
+import 'validator.dart';
 import 'ai_validator.dart';
-
+import 'dynamic_table_edit_dialog.dart'; // Import the edit dialog file.
 
 class ScrollableDialog extends StatelessWidget {
   final String apiHost;
@@ -28,7 +27,6 @@ class ScrollableDialog extends StatelessWidget {
   final dynamic aiQualityChecks;
   final String openAiJsonModeModel;
   final String openAiApiKey;
-
 
   ScrollableDialog({
     required this.apiHost,
@@ -99,10 +97,30 @@ class ScrollableDialog extends StatelessWidget {
     }
   }
 
+  void _openEditDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => DynamicTableEditDialog(
+        apiHost: apiHost,
+        modal: modal,
+        item: item,
+        columns: columns,
+        updateFields: updateFields,
+        validationRules: validationRules,
+        aiQualityChecks: aiQualityChecks,
+        userId: userId,
+        openAiJsonModeModel: openAiJsonModeModel,
+        openAiApiKey: openAiApiKey,
+        options: options, // Pass this property
+        conditionalOptions: conditionalOptions, // Pass this property
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.black, // Set the dialog background to black
+      backgroundColor: Colors.black,
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,20 +131,20 @@ class ScrollableDialog extends StatelessWidget {
                 children: [
                   Text(
                     '${entry.key}: ${entry.value}',
-                    style: TextStyle(color: Colors.white), // Set text color to white
+                    style: TextStyle(color: Colors.white),
                   ),
-                  SizedBox(height: 4), // Adding some spacing
+                  SizedBox(height: 4),
                   TextButton(
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.grey, // Set button background color to grey
+                      backgroundColor: Colors.grey,
                     ),
                     onPressed: () => _launchInBrowser(entry.value.toString(), context),
                     child: Text(
                       'Open URL',
-                      style: TextStyle(color: Colors.white), // Set button text color to white
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
-                  SizedBox(height: 16), // Adding some spacing after each entry
+                  SizedBox(height: 16),
                 ],
               );
             } else {
@@ -134,7 +152,7 @@ class ScrollableDialog extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
                   '${entry.key}: ${entry.value}',
-                  style: TextStyle(color: Colors.white), // Set text color to white
+                  style: TextStyle(color: Colors.white),
                 ),
               );
             }
@@ -146,6 +164,10 @@ class ScrollableDialog extends StatelessWidget {
           onPressed: _shareContent,
           child: Icon(Icons.share, color: Colors.white),
         ),
+        TextButton(
+          onPressed: () => _openEditDialog(context), // Add this line.
+          child: Icon(Icons.edit, color: Colors.white),
+        ),
         if (delete)
           TextButton(
             onPressed: () => _deleteItem(context),
@@ -153,14 +175,10 @@ class ScrollableDialog extends StatelessWidget {
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            'Close',
-            style: TextStyle(color: Colors.white), // Set text color to white
-          ),
+          child: Text('Close', style: TextStyle(color: Colors.white)),
         ),
       ],
     );
   }
-
 }
 
