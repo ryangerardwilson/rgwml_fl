@@ -4,6 +4,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'modal_config.dart';
+import 'xoror.dart';
+import 'validator.dart'; 
+import 'ai_validator.dart';
+
 
 class ScrollableDialog extends StatelessWidget {
   final String apiHost;
@@ -15,6 +20,16 @@ class ScrollableDialog extends StatelessWidget {
   final bool delete;
   final VoidCallback onDelete;
 
+  final String userId;
+  final List<String> columns;
+  final Options options;
+  final Map<String, List<ConditionalOption>> conditionalOptions;
+  final Map<String, List<String>> validationRules;
+  final dynamic aiQualityChecks;
+  final String openAiJsonModeModel;
+  final String openAiApiKey;
+
+
   ScrollableDialog({
     required this.apiHost,
     required this.modal,
@@ -24,6 +39,14 @@ class ScrollableDialog extends StatelessWidget {
     required this.updateFields,
     required this.delete,
     required this.onDelete,
+    required this.userId,
+    required this.columns,
+    required this.options,
+    required this.conditionalOptions,
+    required this.validationRules,
+    required this.aiQualityChecks,
+    required this.openAiJsonModeModel,
+    required this.openAiApiKey,
   });
 
   Future<void> _launchInBrowser(String url, BuildContext context) async {

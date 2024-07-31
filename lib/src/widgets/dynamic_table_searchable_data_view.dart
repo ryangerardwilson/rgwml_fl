@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dynamic_table_data_list.dart';
+import 'modal_config.dart';
 
 class SearchableDataView extends StatefulWidget {
   final String apiHost;
@@ -15,6 +16,16 @@ class SearchableDataView extends StatefulWidget {
   final String? queryError;
   final Function handleSearchSubmit;
 
+  final String userId;
+  final List<String> columns;
+  final Options options;
+  final Map<String, List<ConditionalOption>> conditionalOptions;
+  final Map<String, List<String>> validationRules;
+  final dynamic aiQualityChecks;
+  final String openAiJsonModeModel;
+  final String openAiApiKey;
+
+
   const SearchableDataView({
     required this.apiHost,
     required this.modal,
@@ -26,6 +37,16 @@ class SearchableDataView extends StatefulWidget {
     required this.searchData,
     required this.queryError,
     required this.handleSearchSubmit,
+
+    required this.userId,
+    required this.columns,
+    required this.options,
+    required this.conditionalOptions,
+    required this.validationRules,
+    required this.aiQualityChecks,
+    required this.openAiJsonModeModel,
+    required this.openAiApiKey,
+
   });
 
   @override
@@ -129,6 +150,17 @@ class _SearchableDataViewState extends State<SearchableDataView> {
                   updateFields: widget.updateFields,
                   delete: widget.delete,
                   onDeleteItem: _refreshData,
+
+                userId: widget.userId,
+                columns: widget.columns,
+                options: widget.options,
+                conditionalOptions: widget.conditionalOptions,
+                validationRules: widget.validationRules,
+                aiQualityChecks: widget.aiQualityChecks,
+                openAiJsonModeModel: widget.openAiJsonModeModel,
+                openAiApiKey: widget.openAiApiKey,
+
+
                 ),
               ),
             ],

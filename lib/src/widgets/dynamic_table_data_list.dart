@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dynamic_table_scrollable_dialog.dart';
+import 'modal_config.dart';
 
 class DataList extends StatelessWidget { // Note: This is now StatelessWidget
   final String apiHost;
@@ -10,6 +11,14 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
   final List<String> updateFields;
   final bool delete;
   final VoidCallback onDeleteItem;
+  final String userId;
+  final List<String> columns;
+  final Options options;
+  final Map<String, List<ConditionalOption>> conditionalOptions;
+  final Map<String, List<String>> validationRules;
+  final dynamic aiQualityChecks;
+  final String openAiJsonModeModel;
+  final String openAiApiKey;
 
   DataList({
     required this.apiHost,
@@ -20,9 +29,19 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
     required this.create,
     required this.delete,
     required this.onDeleteItem,
+
+    required this.userId,
+    required this.columns,
+    required this.options,
+    required this.conditionalOptions,
+    required this.validationRules,
+    required this.aiQualityChecks,
+    required this.openAiJsonModeModel,
+    required this.openAiApiKey,
+
   });
 
-  void _removeItem(BuildContext context, int index) {
+  void _reloadData(BuildContext context, int index) {
     // Deleting the item directly
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Item deleted successfully!')),
@@ -48,7 +67,15 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
                 readFields: readFields,
                 updateFields: updateFields,
                 delete: delete,
-                onDelete: () => _removeItem(context, index),
+                onDelete: () => _reloadData(context, index),
+                userId: userId,
+                columns: columns,
+                options: options,
+                conditionalOptions: conditionalOptions,
+                validationRules: validationRules,
+                aiQualityChecks: aiQualityChecks,
+                openAiJsonModeModel: openAiJsonModeModel,
+                openAiApiKey: openAiApiKey,
               ),
             );
           },

@@ -223,6 +223,16 @@ void _showCreateDialog() {
                 searchData: _searchData,
                 queryError: _queryError,
                 handleSearchSubmit: handleSearchSubmit,
+
+                userId: widget.userId,
+                columns: widget.readFields,
+                options: widget.options,
+                conditionalOptions: widget.conditionalOptions,
+                validationRules: widget.validationRules,
+                aiQualityChecks: widget.aiQualityChecks,
+                openAiJsonModeModel: widget.openAiJsonModeModel,
+                openAiApiKey: widget.openAiApiKey,
+
               ),
             ),
           ],

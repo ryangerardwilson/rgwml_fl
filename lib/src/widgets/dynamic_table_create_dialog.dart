@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'modal_config.dart';
 import 'xoror.dart';
-import 'validator.dart'; // Import the Validator class
+import 'validator.dart';
 import 'ai_validator.dart';
 
 class DynamicTableCreateDialog extends StatefulWidget {
