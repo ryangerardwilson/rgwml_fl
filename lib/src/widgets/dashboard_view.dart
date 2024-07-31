@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dynamic_table.dart'; 
-import '../modal_config.dart';
+import 'modal_config.dart';
 
 class DashboardView extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -17,6 +17,8 @@ class DashboardView extends StatefulWidget {
   final void Function(BuildContext) onSettingsPressed;
   final ModalConfigMap modalConfig;
   final String apiHost;
+  final String openAiJsonModeModel;
+  final String openAiApiKey;
 
   DashboardView({
     required this.scaffoldKey,
@@ -32,6 +34,8 @@ class DashboardView extends StatefulWidget {
     required this.onSettingsPressed,
     required this.modalConfig,
     required this.apiHost,
+    required this.openAiJsonModeModel,
+    required this.openAiApiKey
   });
 
   @override
@@ -188,6 +192,8 @@ Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<St
                         options: widget.modalConfig.configs[modalKey]!.options,
                         conditionalOptions: widget.modalConfig.configs[modalKey]!.conditionalOptions,
                         validationRules: widget.modalConfig.configs[modalKey]!.validationRules,
+                        openAiJsonModeModel: widget.openAiJsonModeModel,
+                        openAiApiKey: widget.openAiApiKey
                       ),
                     ),
                   ),

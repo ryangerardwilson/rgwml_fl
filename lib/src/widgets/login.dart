@@ -2,24 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dashboard.dart'; // Ensure this path is correct
-import '../modal_config.dart'; // Ensure this path is correct
+import 'dashboard.dart';
+import 'modal_config.dart';
 
 class LoginPage extends StatefulWidget {
   final String apiHost;
   final String title;
-  //final List<String> cardTitles;
   final String versionUrl;
   final String currentVersion;
-  final ModalConfigMap modalConfig; // Add this parameter
+  final ModalConfigMap modalConfig;
+  final String openAiJsonModeModel;
+  final String openAiApiKey;
 
   LoginPage({
     required this.apiHost,
     required this.title,
-    //required this.cardTitles,
     required this.versionUrl,
     required this.currentVersion,
-    required this.modalConfig, // Ensure this is a required parameter
+    required this.modalConfig,
+    required this.openAiJsonModeModel,
+    required this.openAiApiKey
   });
 
   @override
@@ -60,11 +62,12 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(
             builder: (context) => CRMDashboard(
               title: widget.title,
-              //cardTitles: widget.cardTitles,
               versionUrl: widget.versionUrl,
               currentVersion: widget.currentVersion,
               apiHost: widget.apiHost,
-              modalConfig: widget.modalConfig, // Pass modalConfig here
+              modalConfig: widget.modalConfig,
+              openAiJsonModeModel: widget.openAiJsonModeModel,
+              openAiApiKey: widget.openAiApiKey
             ),
           ),
         );

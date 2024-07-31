@@ -37,13 +37,37 @@ class ModalConfig {
 
 class Options {
   final Map<String, List<String>> xorOptions;
+  final Map<String, List<String>> orOptions;
 
-  Options(this.xorOptions);
+  Options(Map<String, List<String>> options)
+      : xorOptions = _extractOptions(options, 'XOR', 5),
+        orOptions = _extractOptions(options, 'OR', 4) {
+    // Debug print statements
+    print('Initial Options: $options');
+    print('Extracted XOR Options: $xorOptions');
+    print('Extracted OR Options: $orOptions');
+  }
+
+  static Map<String, List<String>> _extractOptions(
+      Map<String, List<String>> options, String type, int lengthToRemove) {
+    final Map<String, List<String>> result = {};
+    options.forEach((key, value) {
+      if (key.endsWith('[$type]')) {
+        final cleanedKey = key.substring(0, key.length - lengthToRemove);
+        print('Found $type option: $cleanedKey');  // Debug statement
+        result[cleanedKey] = value;
+      }
+    });
+    return result;
+  }
 
   Map<String, dynamic> toJson() => {
     'xorOptions': xorOptions,
+    'orOptions': orOptions,
   };
 }
+
+
 
 class ConditionalOption {
   final String condition;

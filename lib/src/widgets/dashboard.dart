@@ -6,21 +6,25 @@ import 'dashboard_view.dart';
 import 'login.dart';
 import 'crontab.dart';
 import 'dashboard_utils.dart'; // Ensure the correct path
-import '../modal_config.dart'; // Ensure the correct path
+import 'modal_config.dart'; // Ensure the correct path
 
 class CRMDashboard extends StatefulWidget {
   final String title;
   final String versionUrl;
   final String currentVersion;
   final String apiHost;
-  final ModalConfigMap modalConfig; // Add this parameter
+  final ModalConfigMap modalConfig;
+  final String openAiJsonModeModel;
+  final String openAiApiKey;
 
   CRMDashboard({
     required this.title,
     required this.versionUrl,
     required this.currentVersion,
     required this.apiHost,
-    required this.modalConfig, // Ensure this is a required parameter
+    required this.modalConfig,
+    required this.openAiJsonModeModel,
+    required this.openAiApiKey,
   });
 
   @override
@@ -102,6 +106,8 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
       onSettingsPressed: (context) => _openSettings(context),
       modalConfig: widget.modalConfig,
       apiHost: widget.apiHost,
+      openAiJsonModeModel: widget.openAiJsonModeModel,
+      openAiApiKey: widget.openAiApiKey
     );
   }
 
@@ -182,6 +188,8 @@ Future<void> _logout(BuildContext context) async {
         versionUrl: widget.versionUrl,
         currentVersion: widget.currentVersion,
         modalConfig: widget.modalConfig,
+        openAiJsonModeModel: widget.openAiJsonModeModel,
+        openAiApiKey: widget.openAiApiKey
       ),
     ),
     (Route<dynamic> route) => false, // This removes all previous routes

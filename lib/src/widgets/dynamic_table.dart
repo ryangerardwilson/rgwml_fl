@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dynamic_table_searchable_data_view.dart';
 import 'dynamic_table_create_dialog.dart';
-import '../modal_config.dart';
+import 'modal_config.dart';
 
 
 // Define a function to fetch data from the API
@@ -53,7 +53,8 @@ class DynamicTable extends StatefulWidget {
   final Options options;
   final Map<String, List<ConditionalOption>> conditionalOptions;
   final Map<String, List<String>> validationRules;
-
+  final String openAiJsonModeModel;
+  final String openAiApiKey;
 
   DynamicTable({
     required this.apiHost,
@@ -66,6 +67,8 @@ class DynamicTable extends StatefulWidget {
     required this.options,
     required this.conditionalOptions,
     required this.validationRules,
+    required this.openAiJsonModeModel,
+    required this.openAiApiKey,
   });
 
   @override
@@ -128,7 +131,9 @@ class _DynamicTableState extends State<DynamicTable> {
           columns: widget.readFields,
           options: widget.options,
           conditionalOptions: widget.conditionalOptions,
-          validationRules: widget.validationRules
+          validationRules: widget.validationRules,
+          openAiJsonModeModel: widget.openAiJsonModeModel,
+          openAiApiKey: widget.openAiApiKey,
         );
       },
     ).then((_) {
@@ -186,11 +191,13 @@ class _DynamicTableState extends State<DynamicTable> {
     );
   }
 
+  int _currentIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        color: Colors.black, // Set background color to black
+        color: Colors.black,
         child: Column(
           children: [
             Expanded(
@@ -207,37 +214,45 @@ class _DynamicTableState extends State<DynamicTable> {
                 handleSearchSubmit: handleSearchSubmit,
               ),
             ),
-            SizedBox(height: 16), // Space between the table and the buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FloatingActionButton(
-                  onPressed: _showCreateDialog,
-                  child: Icon(Icons.add, color: Colors.white),
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.white, width: 2.0),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                SizedBox(width: 16), // Space between the buttons
-                FloatingActionButton(
-                  onPressed: _showSearchDialog,
-                  child: Icon(Icons.search, color: Colors.white),
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.white, width: 2.0),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
-      bottomNavigationBar: _queryError != null ? BottomAppBar(
-        child: Text(_queryError!, style: TextStyle(color: Colors.red)),
-      ) : null,
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          if (index == 0) {
+            _showCreateDialog();
+          } else if (index == 1) {
+            _showSearchDialog();
+          }
+        },
+        backgroundColor: Colors.black,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white60,
+        items: [
+          BottomNavigationBarItem(
+            icon: Column(
+              children: [
+                Icon(Icons.add, color: Colors.white),
+                Text('Create', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Column(
+              children: [
+                Icon(Icons.search, color: Colors.white),
+                Text('Search', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            label: '',
+          ),
+        ],
+      ),
     );
   }
 }
