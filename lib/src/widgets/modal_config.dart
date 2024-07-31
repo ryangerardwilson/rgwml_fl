@@ -8,13 +8,14 @@ class ModalConfigMap {
   };
 }
 
+
 class ModalConfig {
   final Options options;
   final Map<String, List<ConditionalOption>> conditionalOptions;
   final Scopes scopes;
   final Map<String, List<String>> validationRules;
   final List<String> readRoutes;
-  final Map<String, List<String>>? aiQualityChecks;
+  final dynamic aiQualityChecks;
 
   ModalConfig({
     required this.options,
@@ -22,7 +23,7 @@ class ModalConfig {
     required this.scopes,
     required this.validationRules,
     required this.readRoutes,
-    this.aiQualityChecks,
+    required this.aiQualityChecks,
   });
 
   Map<String, dynamic> toJson() => {
@@ -34,6 +35,8 @@ class ModalConfig {
     'aiQualityChecks': aiQualityChecks,
   };
 }
+
+
 
 class Options {
   final Map<String, List<String>> xorOptions;

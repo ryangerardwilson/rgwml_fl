@@ -43,6 +43,7 @@ Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, Strin
 }
 
 class DynamicTable extends StatefulWidget {
+  final String userId;
   final String apiHost;
   final String modal;
   final String route;
@@ -53,10 +54,12 @@ class DynamicTable extends StatefulWidget {
   final Options options;
   final Map<String, List<ConditionalOption>> conditionalOptions;
   final Map<String, List<String>> validationRules;
+  final dynamic aiQualityChecks;
   final String openAiJsonModeModel;
   final String openAiApiKey;
 
   DynamicTable({
+    required this.userId,
     required this.apiHost,
     required this.modal,
     required this.route,
@@ -67,6 +70,7 @@ class DynamicTable extends StatefulWidget {
     required this.options,
     required this.conditionalOptions,
     required this.validationRules,
+    required this.aiQualityChecks,
     required this.openAiJsonModeModel,
     required this.openAiApiKey,
   });
@@ -121,28 +125,35 @@ class _DynamicTableState extends State<DynamicTable> {
     }
   }
 
-  void _showCreateDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return DynamicTableCreateDialog(
-          apiHost: widget.apiHost,
-          modal: widget.modal,
-          columns: widget.readFields,
-          options: widget.options,
-          conditionalOptions: widget.conditionalOptions,
-          validationRules: widget.validationRules,
-          openAiJsonModeModel: widget.openAiJsonModeModel,
-          openAiApiKey: widget.openAiApiKey,
-        );
-      },
-    ).then((_) {
-      // Refresh data after closing the create dialog
-      setState(() {
-        fetchData(widget.apiHost, widget.modal, widget.route);
+void _showCreateDialog() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return DynamicTableCreateDialog(
+        userId: widget.userId,
+        apiHost: widget.apiHost,
+        modal: widget.modal,
+        columns: widget.readFields,
+        options: widget.options,
+        conditionalOptions: widget.conditionalOptions,
+        validationRules: widget.validationRules,
+        aiQualityChecks: widget.aiQualityChecks,
+        openAiJsonModeModel: widget.openAiJsonModeModel,
+        openAiApiKey: widget.openAiApiKey,
+      );
+    },
+  ).then((result) {
+    if (result == true) {
+      // Reload data if the create dialog returns success
+      fetchData(widget.apiHost, widget.modal, widget.route).then((data) {
+        setState(() {
+          _searchData = data;
+        });
       });
-    });
-  }
+    }
+  });
+}
+
 
   void _showSearchDialog() {
     showDialog(
@@ -217,42 +228,50 @@ class _DynamicTableState extends State<DynamicTable> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          if (index == 0) {
-            _showCreateDialog();
-          } else if (index == 1) {
-            _showSearchDialog();
-          }
-        },
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white60,
-        items: [
-          BottomNavigationBarItem(
-            icon: Column(
-              children: [
-                Icon(Icons.add, color: Colors.white),
-                Text('Create', style: TextStyle(color: Colors.white)),
-              ],
+      bottomNavigationBar: widget.create 
+        ? BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+            if (index == 0) {
+              _showCreateDialog();
+            } else if (index == 1) {
+              _showSearchDialog();
+            }
+          },
+          backgroundColor: Colors.black,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.white60,
+          items: [
+            BottomNavigationBarItem(
+              icon: Column(
+                children: [
+                  Icon(Icons.add, color: Colors.white),
+                  Text('Create', style: TextStyle(color: Colors.white)),
+                ],
+              ),
+              label: '',
             ),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Column(
-              children: [
-                Icon(Icons.search, color: Colors.white),
-                Text('Search', style: TextStyle(color: Colors.white)),
-              ],
+            BottomNavigationBarItem(
+              icon: Column(
+                children: [
+                  Icon(Icons.search, color: Colors.white),
+                  Text('Search', style: TextStyle(color: Colors.white)),
+                ],
+              ),
+              label: '',
             ),
-            label: '',
+          ],
+        )
+        : BottomAppBar(
+          color: Colors.black,
+          child: IconButton(
+            icon: Icon(Icons.search, color: Colors.white),
+            onPressed: _showSearchDialog,
           ),
-        ],
-      ),
+        ),
     );
   }
 }

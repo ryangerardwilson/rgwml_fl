@@ -182,6 +182,7 @@ Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<St
                         iconTheme: IconThemeData(color: Colors.grey[300]),
                       ),
                       body: DynamicTable(
+                        userId: widget.userId,
                         apiHost: widget.apiHost,
                         modal: modalKey,
                         route: _selectedReadRoute[modalKey] ?? '',
@@ -192,6 +193,7 @@ Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<St
                         options: widget.modalConfig.configs[modalKey]!.options,
                         conditionalOptions: widget.modalConfig.configs[modalKey]!.conditionalOptions,
                         validationRules: widget.modalConfig.configs[modalKey]!.validationRules,
+                        aiQualityChecks: widget.modalConfig.configs[modalKey]!.aiQualityChecks,
                         openAiJsonModeModel: widget.openAiJsonModeModel,
                         openAiApiKey: widget.openAiApiKey
                       ),
