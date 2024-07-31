@@ -1,3 +1,4 @@
+// dynamic_table_edit_dialog.dart 
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -19,6 +20,7 @@ class DynamicTableEditDialog extends StatefulWidget {
   final String openAiApiKey;
   final Options options;
   final Map<String, List<ConditionalOption>> conditionalOptions;
+  final VoidCallback onEdit;
 
   const DynamicTableEditDialog({
     required this.apiHost,
@@ -33,6 +35,7 @@ class DynamicTableEditDialog extends StatefulWidget {
     required this.openAiApiKey,
     required this.options,
     required this.conditionalOptions,
+    required this.onEdit,
   });
 
   @override
@@ -65,6 +68,7 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
           SnackBar(content: Text('Record updated successfully')),
         );
         Navigator.of(context).pop(true);
+         widget.onEdit();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update record')),

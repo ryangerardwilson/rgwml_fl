@@ -150,6 +150,7 @@ class _SearchableDataViewState extends State<SearchableDataView> {
                   updateFields: widget.updateFields,
                   delete: widget.delete,
                   onDeleteItem: _refreshData,
+                  onEditItem: _refreshData,
 
                 userId: widget.userId,
                 columns: widget.columns,

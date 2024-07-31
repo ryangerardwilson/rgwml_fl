@@ -1,3 +1,4 @@
+// dynamic_table_scrollable_dialog.dart 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -15,6 +16,7 @@ class ScrollableDialog extends StatelessWidget {
   final List<String> updateFields;
   final bool delete;
   final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
   final String userId;
   final List<String> columns;
@@ -34,6 +36,8 @@ class ScrollableDialog extends StatelessWidget {
     required this.updateFields,
     required this.delete,
     required this.onDelete,
+    required this.onEdit,
+
     required this.userId,
     required this.columns,
     required this.options,
@@ -89,7 +93,7 @@ class ScrollableDialog extends StatelessWidget {
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
       return result['status'] == 'success';
-    } else {
+    } else { 
       return false;
     }
   }
@@ -108,8 +112,9 @@ class ScrollableDialog extends StatelessWidget {
         userId: userId,
         openAiJsonModeModel: openAiJsonModeModel,
         openAiApiKey: openAiApiKey,
-        options: options, // Pass this property
+        options: options, // Pass this property 
         conditionalOptions: conditionalOptions, // Pass this property
+        onEdit: onEdit,
       ),
     );
   }
@@ -157,25 +162,31 @@ class ScrollableDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _shareContent,
-          child: Icon(Icons.share, color: Colors.white),
-        ),
-        TextButton(
-          onPressed: () => _openEditDialog(context), // Add this line.
-          child: Icon(Icons.edit, color: Colors.white),
-        ),
-        if (delete)
-          TextButton(
-            onPressed: () => _deleteItem(context),
-            child: Icon(Icons.delete, color: Colors.red),
+        Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.max, // Ensure the row takes up minimum space required
+            mainAxisAlignment: MainAxisAlignment.end, // Center the buttons horizontally
+            children: [
+              TextButton(
+                onPressed: _shareContent,
+                child: Icon(Icons.share, color: Colors.white),
+              ),
+              TextButton(
+                onPressed: () => _openEditDialog(context), // Add this line.
+                child: Icon(Icons.edit, color: Colors.white),
+              ),
+              if (delete)
+                TextButton(
+                  onPressed: () => _deleteItem(context),
+                  child: Icon(Icons.delete, color: Colors.red),
+                ),
+            ],
           ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Close', style: TextStyle(color: Colors.white)),
         ),
       ],
     );
   }
+
+
 }
 

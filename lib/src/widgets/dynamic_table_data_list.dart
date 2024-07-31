@@ -11,6 +11,7 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
   final List<String> updateFields;
   final bool delete;
   final VoidCallback onDeleteItem;
+  final VoidCallback onEditItem;
   final String userId;
   final List<String> columns;
   final Options options;
@@ -29,6 +30,7 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
     required this.create,
     required this.delete,
     required this.onDeleteItem,
+    required this.onEditItem,
 
     required this.userId,
     required this.columns,
@@ -49,6 +51,16 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
     onDeleteItem(); // Call the callback to refresh data in the parent
   }
 
+  void _reloadDataEdit(BuildContext context, int index) {
+    Navigator.of(context).pop();
+    // Deleting the item directly
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Item edited successfully!')),
+    );
+    onEditItem(); // Call the callback to refresh data in the parent
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -68,6 +80,7 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
                 updateFields: updateFields,
                 delete: delete,
                 onDelete: () => _reloadData(context, index),
+                onEdit: () => _reloadDataEdit(context, index),
                 userId: userId,
                 columns: columns,
                 options: options,
