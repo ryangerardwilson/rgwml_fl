@@ -64,11 +64,11 @@ class _SearchableDataViewState extends State<SearchableDataView> {
 
   Future<List<Map<String, dynamic>>> fetchData() async {
     final apiUrl = '${widget.apiHost}read/${widget.modal}/${widget.route}';
-    print('API URL: $apiUrl');
+    //print('API URL: $apiUrl');
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
-      print('API Response: ${response.statusCode} - ${response.body}');
+      //print('API Response: ${response.statusCode} - ${response.body}');
 
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);

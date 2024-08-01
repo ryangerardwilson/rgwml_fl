@@ -42,8 +42,8 @@ class _DynamicTableCreateDialogState extends State<DynamicTableCreateDialog> {
 void _handleCreate() async {
   try {
     _formData['user_id'] = widget.userId;
-    print(widget.userId);
-    print(_formData);
+    //print(widget.userId);
+    //print(_formData);
 
     final response = await http.post(
       Uri.parse('${widget.apiHost}create/${widget.modal}'),

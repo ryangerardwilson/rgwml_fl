@@ -78,7 +78,7 @@ class ScrollableDialog extends StatelessWidget {
 
   Future<bool> deleteItemFromAPI(dynamic id, dynamic userId) async {
     final apiUrl = apiHost + 'delete/$modal/$id';
-    print('DELETE API URL: $apiUrl');
+    //print('DELETE API URL: $apiUrl');
 
     final url = Uri.parse(apiUrl);
 

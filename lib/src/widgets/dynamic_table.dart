@@ -10,11 +10,11 @@ import 'modal_config.dart';
 // Define a function to fetch data from the API
 Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, String route) async {
   final apiUrl = apiHost + 'read/$modal/$route';
-  print('API URL: $apiUrl');
+  //print('API URL: $apiUrl');
 
   try {
     final response = await http.get(Uri.parse(apiUrl));
-    print('API Response: ${response.statusCode} - ${response.body}');
+    //print('API Response: ${response.statusCode} - ${response.body}');
 
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
@@ -85,10 +85,10 @@ class _DynamicTableState extends State<DynamicTable> {
 
   Future<void> handleSearchSubmit(String apiHost, String modal, String queryInput) async {
     final fullUrl = apiHost + 'search/$modal';
-    print('Requesting URL: $fullUrl');
+    //print('Requesting URL: $fullUrl');
 
     final payload = jsonEncode({'search_string': queryInput.trim()});
-    print('Payload: $payload');
+    //print('Payload: $payload');
 
     try {
       final response = await http.post(
@@ -97,7 +97,7 @@ class _DynamicTableState extends State<DynamicTable> {
         body: payload,
       );
 
-      print('Full Response: ${response.body}');
+      //print('Full Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);

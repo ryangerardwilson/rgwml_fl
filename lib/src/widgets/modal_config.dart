@@ -46,9 +46,9 @@ class Options {
       : xorOptions = _extractOptions(options, 'XOR', 5),
         orOptions = _extractOptions(options, 'OR', 4) {
     // Debug print statements
-    print('Initial Options: $options');
-    print('Extracted XOR Options: $xorOptions');
-    print('Extracted OR Options: $orOptions');
+    //print('Initial Options: $options');
+    //print('Extracted XOR Options: $xorOptions');
+    //print('Extracted OR Options: $orOptions');
   }
 
   static Map<String, List<String>> _extractOptions(
@@ -57,7 +57,7 @@ class Options {
     options.forEach((key, value) {
       if (key.endsWith('[$type]')) {
         final cleanedKey = key.substring(0, key.length - lengthToRemove);
-        print('Found $type option: $cleanedKey');  // Debug statement
+        //print('Found $type option: $cleanedKey');  // Debug statement
         result[cleanedKey] = value;
       }
     });
