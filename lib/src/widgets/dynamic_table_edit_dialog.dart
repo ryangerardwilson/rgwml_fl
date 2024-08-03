@@ -1,5 +1,5 @@
-// dynamic_table_edit_dialog.dart 
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'modal_config.dart';
@@ -45,11 +45,73 @@ class DynamicTableEditDialog extends StatefulWidget {
 class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
   final _formKey = GlobalKey<FormState>();
   late Map<String, dynamic> _formData;
+  bool _isLoading = true;
+  //bool _locationFetched = false;
 
   @override
   void initState() {
     super.initState();
     _formData = Map.from(widget.item);
+
+    checkAndFetchLocation();
+  }
+
+  Future<void> checkAndFetchLocation() async {
+    bool requiresLocation = widget.columns.any((column) =>
+        column.endsWith('_android_latitude') ||
+        column.endsWith('_android_longitude'));
+
+    if (requiresLocation) {
+      try {
+        // Fetch location
+        Location location = Location();
+
+        bool _serviceEnabled;
+        PermissionStatus _permissionGranted;
+        LocationData _locationData;
+
+        _serviceEnabled = await location.serviceEnabled();
+        if (!_serviceEnabled) {
+          _serviceEnabled = await location.requestService();
+          if (!_serviceEnabled) {
+            print("Location service not enabled");
+            return;
+          }
+        }
+
+        _permissionGranted = await location.hasPermission();
+        if (_permissionGranted == PermissionStatus.denied) {
+          _permissionGranted = await location.requestPermission();
+          if (_permissionGranted != PermissionStatus.granted) {
+            print("Location permission not granted");
+            return;
+          }
+        }
+
+        _locationData = await location.getLocation();
+        
+        setState(() {
+          widget.columns.forEach((column) {
+            if (column.endsWith('_android_latitude')) {
+              _formData[column] = _locationData.latitude?.toString() ?? '0';
+            } else if (column.endsWith('_android_longitude')) {
+              _formData[column] = _locationData.longitude?.toString() ?? '0';
+            }
+          });
+          //_locationFetched = true;
+          _isLoading = false; // Stop loading once location is fetched
+        });
+      } catch (e) {
+        print("Error fetching location: $e");
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _handleUpdate() async {
@@ -68,7 +130,7 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
           SnackBar(content: Text('Record updated successfully')),
         );
         Navigator.of(context).pop(true);
-         widget.onEdit();
+        widget.onEdit();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update record')),
@@ -133,6 +195,13 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
   }
 
   Widget _buildTextFormField(String column) {
+    bool isAndroidLatitudeField = column.endsWith('_android_latitude');
+    bool isAndroidLongitudeField = column.endsWith('_android_longitude');
+
+    if (isAndroidLatitudeField || isAndroidLongitudeField) {
+      return _buildNonEditableField(column);
+    }
+
     return TextFormField(
       initialValue: _formData[column]?.toString() ?? '',
       decoration: InputDecoration(
@@ -206,8 +275,12 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
   }
 
   List<Widget> _buildFormFields() {
-    return widget.columns.map((column) {
-      if (!widget.updateFields.contains(column)) {
+    return widget.columns.where((column) => 
+        column.endsWith('_android_latitude') ||
+        column.endsWith('_android_longitude') ||
+        widget.updateFields.contains(column)
+    ).map((column) {
+      if (column.endsWith('_android_latitude') || column.endsWith('_android_longitude')) {
         return _buildNonEditableField(column);
       }
 
@@ -245,42 +318,44 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
     return AlertDialog(
       title: Text('Edit Record', style: TextStyle(color: Colors.white)),
       backgroundColor: Colors.black,
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: _buildFormFields(),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: Text('Cancel', style: TextStyle(color: Colors.white)),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        TextButton(
-          child: Text('Submit', style: TextStyle(color: Colors.white)),
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              List<String> errorMessages = await _validateForm();
-              if (errorMessages.isEmpty) {
-                _handleUpdate();
-              } else {
-                _showValidationErrorDialog(errorMessages);
-              }
-            } else {
-              List<String> errorMessages = await _validateForm();
-              _showValidationErrorDialog(errorMessages);
-            }
-          },
-        ),
-      ],
+      content: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _buildFormFields(),
+                ),
+              ),
+            ),
+      actions: !_isLoading
+          ? [
+              TextButton(
+                child: Text('Cancel', style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Submit', style: TextStyle(color: Colors.white)),
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    List<String> errorMessages = await _validateForm();
+                    if (errorMessages.isEmpty) {
+                      _handleUpdate();
+                    } else {
+                      _showValidationErrorDialog(errorMessages);
+                    }
+                  } else {
+                    List<String> errorMessages = await _validateForm();
+                    _showValidationErrorDialog(errorMessages);
+                  }
+                },
+              ),
+            ]
+          : [],
     );
   }
 }
-
-
 

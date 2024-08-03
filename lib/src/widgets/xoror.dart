@@ -7,11 +7,12 @@ class XorOrSelector extends StatefulWidget {
   final Function(String) onSelectionChanged;
 
   const XorOrSelector({
+    Key? key, // Add the key parameter to the constructor
     required this.options,
     required this.isXor,
     required this.columnName,
     required this.onSelectionChanged,
-  });
+  }) : super(key: key); // Pass the key to the super constructor
 
   @override
   _XorOrSelectorState createState() => _XorOrSelectorState();
@@ -19,7 +20,7 @@ class XorOrSelector extends StatefulWidget {
 
 class _XorOrSelectorState extends State<XorOrSelector> {
   String? _selectedOption;
-  Set<String> _selectedOptions = {};
+  final Set<String> _selectedOptions = {}; // Make the field final
 
   void _onOptionSelected(String option) {
     setState(() {
@@ -47,13 +48,13 @@ class _XorOrSelectorState extends State<XorOrSelector> {
         children: [
           Text(
             '${widget.columnName} (${widget.isXor ? "XOR" : "OR"})',
-            style: TextStyle(color: Colors.white, fontSize: 16), // Increase font size
+            style: const TextStyle(color: Colors.white, fontSize: 16), // Increase font size
           ),
           Column(
             children: widget.options.map((option) {
               return ListTile(
-                title: Text(option, style: TextStyle(color: Colors.white)),
-                leading: widget.isXor 
+                title: Text(option, style: const TextStyle(color: Colors.white)),
+                leading: widget.isXor
                   ? Radio<String>(
                       value: option,
                       groupValue: _selectedOption,

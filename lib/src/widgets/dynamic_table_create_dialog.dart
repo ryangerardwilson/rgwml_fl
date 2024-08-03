@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'modal_config.dart';
@@ -38,41 +39,97 @@ class DynamicTableCreateDialog extends StatefulWidget {
 class _DynamicTableCreateDialogState extends State<DynamicTableCreateDialog> {
   final _formKey = GlobalKey<FormState>();
   final Map<String, dynamic> _formData = {};
+  bool _isLoading = true;
 
-void _handleCreate() async {
-  try {
-    _formData['user_id'] = widget.userId;
-    //print(widget.userId);
-    //print(_formData);
+  @override
+  void initState() {
+    super.initState();
+    checkAndFetchLocation();
+  }
 
-    final response = await http.post(
-      Uri.parse('${widget.apiHost}create/${widget.modal}'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(_formData),
-    );
+  Future<void> checkAndFetchLocation() async {
+    bool requiresLocation = widget.columns.any((column) =>
+        column.endsWith('_android_latitude') ||
+        column.endsWith('_android_longitude'));
 
-    final result = jsonDecode(response.body);
-    if (result['status'] == 'success') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Record created successfully')),
-      );
-      Navigator.of(context).pop(true); // Return true to indicate success
+    if (requiresLocation) {
+      try {
+        Location location = Location();
+
+        bool _serviceEnabled = await location.serviceEnabled();
+        if (!_serviceEnabled) {
+          _serviceEnabled = await location.requestService();
+          if (!_serviceEnabled) {
+            print("Location service not enabled");
+            return;
+          }
+        }
+
+        PermissionStatus _permissionGranted = await location.hasPermission();
+        if (_permissionGranted == PermissionStatus.denied) {
+          _permissionGranted = await location.requestPermission();
+          if (_permissionGranted != PermissionStatus.granted) {
+            print("Location permission not granted");
+            return;
+          }
+        }
+
+        LocationData _locationData = await location.getLocation();
+        
+        setState(() {
+          widget.columns.forEach((column) {
+            if (column.endsWith('_android_latitude')) {
+              _formData[column] = _locationData.latitude?.toString() ?? '0';
+            } else if (column.endsWith('_android_longitude')) {
+              _formData[column] = _locationData.longitude?.toString() ?? '0';
+            }
+          });
+          _isLoading = false;
+        });
+      } catch (e) {
+        print("Error fetching location: $e");
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } else {
-      print('Failed to create record: $result');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _handleCreate() async {
+    try {
+      _formData['user_id'] = widget.userId;
+
+      final response = await http.post(
+        Uri.parse('${widget.apiHost}create/${widget.modal}'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(_formData),
+      );
+
+      final result = jsonDecode(response.body);
+      if (result['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Record created successfully')),
+        );
+        Navigator.of(context).pop(true); // Return true to indicate success
+      } else {
+        print('Failed to create record: $result');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create record')),
+        );
+      }
+    } catch (error) {
+      print('Error creating record: $error');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create record')),
+        SnackBar(content: Text('Error creating record')),
       );
     }
-  } catch (error) {
-    print('Error creating record: $error');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error creating record')),
-    );
   }
-}
-
 
   void _showValidationErrorDialog(List<String> errorMessages) {
     showDialog(
@@ -129,7 +186,6 @@ void _handleCreate() async {
     return errorMessages;
   }
 
-
   Widget _buildTextFormField(String column) {
     return TextFormField(
       decoration: InputDecoration(
@@ -185,12 +241,32 @@ void _handleCreate() async {
     }
   }
 
-  List<Widget> _buildFormFields() {
-    final filteredColumns = widget.columns
-        .where((col) => !['id', 'user_id', 'created_at', 'updated_at'].contains(col))
-        .toList();
+  Widget _buildNonEditableField(String column) {
+    return TextFormField(
+      initialValue: _formData[column]?.toString() ?? '',
+      decoration: InputDecoration(
+        labelText: column,
+        labelStyle: TextStyle(color: Colors.white),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        filled: true,
+        fillColor: Colors.black,
+      ),
+      style: TextStyle(color: Colors.grey[850]),
+      enabled: false,
+    );
+  }
 
-    return filteredColumns.map((column) {
+  List<Widget> _buildFormFields() {
+    return widget.columns.map((column) {
+      if (column.endsWith('_android_latitude') || column.endsWith('_android_longitude')) {
+        return _buildNonEditableField(column);
+      }
+      
       final xorOptions = widget.options.xorOptions[column];
       final orOptions = widget.options.orOptions[column];
 
@@ -227,39 +303,43 @@ void _handleCreate() async {
     return AlertDialog(
       title: Text('Create Record', style: TextStyle(color: Colors.white)),
       backgroundColor: Colors.black,
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: _buildFormFields(),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: Text('Cancel', style: TextStyle(color: Colors.white)),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        TextButton(
-          child: Text('Submit', style: TextStyle(color: Colors.white)),
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              List<String> errorMessages = await _validateForm();
-              if (errorMessages.isEmpty) {
-                _handleCreate();
-              } else {
-                _showValidationErrorDialog(errorMessages);
-              }
-            } else {
-              List<String> errorMessages = await _validateForm();
-              _showValidationErrorDialog(errorMessages);
-            }
-          },
-        ),
-      ],
+      content: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _buildFormFields(),
+                ),
+              ),
+            ),
+      actions: !_isLoading
+          ? [
+              TextButton(
+                child: Text('Cancel', style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Submit', style: TextStyle(color: Colors.white)),
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    List<String> errorMessages = await _validateForm();
+                    if (errorMessages.isEmpty) {
+                      _handleCreate();
+                    } else {
+                      _showValidationErrorDialog(errorMessages);
+                    }
+                  } else {
+                    List<String> errorMessages = await _validateForm();
+                    _showValidationErrorDialog(errorMessages);
+                  }
+                },
+              ),
+            ]
+          : [],
     );
   }
 }

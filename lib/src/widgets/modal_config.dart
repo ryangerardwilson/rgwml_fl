@@ -45,10 +45,6 @@ class Options {
   Options(Map<String, List<String>> options)
       : xorOptions = _extractOptions(options, 'XOR', 5),
         orOptions = _extractOptions(options, 'OR', 4) {
-    // Debug print statements
-    //print('Initial Options: $options');
-    //print('Extracted XOR Options: $xorOptions');
-    //print('Extracted OR Options: $orOptions');
   }
 
   static Map<String, List<String>> _extractOptions(

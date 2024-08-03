@@ -11,13 +11,13 @@ Future<List<String>> openAiQualityChecks({
   final List<String> failedChecks = [];
 
   if (apiKey.isEmpty) {
-    print("OpenAI API key is not set");
+    //print("OpenAI API key is not set");
     return ["OpenAI API key is not set"];
   }
 
   for (final check in checks) {
     final prompt = """
-    Your only job is to ascertain if the user's input meets this criterion '${check}' and output a boolean true or false, as JSON in this format {"evaluation": "true"}.
+    Your only job is to ascertain if the user's input meets this criterion '$check' and output a boolean true or false, as JSON in this format {"evaluation": "true"}.
     """;
 
     try {
