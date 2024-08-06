@@ -10,6 +10,7 @@ class SearchableDataView extends StatefulWidget {
   final String route;
   final bool create;
   final List<String> readFields;
+  final List<String> readSummaryFields;
   final List<String> updateFields;
   final bool delete;
   final List<Map<String, dynamic>> searchData;
@@ -32,6 +33,7 @@ class SearchableDataView extends StatefulWidget {
     required this.route,
     required this.create,
     required this.readFields,
+    required this.readSummaryFields,
     required this.updateFields,
     required this.delete,
     required this.searchData,
@@ -147,6 +149,7 @@ class _SearchableDataViewState extends State<SearchableDataView> {
                   data: data,
                   create: widget.create,
                   readFields: widget.readFields,
+                  readSummaryFields: widget.readSummaryFields,
                   updateFields: widget.updateFields,
                   delete: widget.delete,
                   onDeleteItem: _refreshData,

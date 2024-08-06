@@ -188,6 +188,7 @@ Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<St
                         route: _selectedReadRoute[modalKey] ?? '',
                         create: widget.modalConfig.configs[modalKey]!.scopes.create,
                         readFields: widget.modalConfig.configs[modalKey]!.scopes.read,
+                        readSummaryFields: widget.modalConfig.configs[modalKey]!.scopes.read_summary,
                         updateFields: widget.modalConfig.configs[modalKey]!.scopes.update,
                         delete: widget.modalConfig.configs[modalKey]!.scopes.delete,
                         options: widget.modalConfig.configs[modalKey]!.options,

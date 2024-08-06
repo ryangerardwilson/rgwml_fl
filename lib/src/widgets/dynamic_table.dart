@@ -1,4 +1,3 @@
-// dynamic_table.dart
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -6,29 +5,23 @@ import 'dynamic_table_searchable_data_view.dart';
 import 'dynamic_table_create_dialog.dart';
 import 'modal_config.dart';
 
-
-// Define a function to fetch data from the API
 Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, String route) async {
   final apiUrl = apiHost + 'read/$modal/$route';
-  //print('API URL: $apiUrl');
 
   try {
     final response = await http.get(Uri.parse(apiUrl));
-    //print('API Response: ${response.statusCode} - ${response.body}');
 
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
 
-      // Ensuring the result contains the expected keys
       if (result.containsKey('columns') && result.containsKey('data')) {
         List<String> columns = List<String>.from(result['columns']);
         List<List<dynamic>> data = List<List<dynamic>>.from(result['data']);
 
-        // Converting list of lists to list of maps
         List<Map<String, dynamic>> dataList = data.map((row) {
           return Map<String, dynamic>.fromIterables(columns, row);
         }).toList();
-
+        
         return dataList;
       } else {
         throw Exception('Unexpected API Response format');
@@ -49,6 +42,7 @@ class DynamicTable extends StatefulWidget {
   final String route;
   final bool create;
   final List<String> readFields;
+  final List<String> readSummaryFields;
   final List<String> updateFields;
   final bool delete;
   final Options options;
@@ -65,6 +59,7 @@ class DynamicTable extends StatefulWidget {
     required this.route,
     required this.create,
     required this.readFields,
+    required this.readSummaryFields,
     required this.updateFields,
     required this.delete,
     required this.options,
@@ -80,92 +75,83 @@ class DynamicTable extends StatefulWidget {
 }
 
 class _DynamicTableState extends State<DynamicTable> {
-  List<Map<String, dynamic>> _searchData = [];
+  List<Map<String, dynamic>> _originalData = [];
+  List<Map<String, dynamic>> _filteredData = [];
   String? _queryError;
+  TextEditingController _searchController = TextEditingController();
 
-  Future<void> handleSearchSubmit(String apiHost, String modal, String queryInput) async {
-    final fullUrl = apiHost + 'search/$modal';
-    //print('Requesting URL: $fullUrl');
-
-    final payload = jsonEncode({'search_string': queryInput.trim()});
-    //print('Payload: $payload');
-
-    try {
-      final response = await http.post(
-        Uri.parse(fullUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: payload,
-      );
-
-      //print('Full Response: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-        List<String> columns = List<String>.from(result["columns"]);
-        List<List<dynamic>> data = List<List<dynamic>>.from(result["data"]);
-        List<Map<String, dynamic>> dataList = data.map((row) {
-          return Map<String, dynamic>.fromIterables(columns, row);
-        }).toList();
-
-        setState(() {
-          _searchData = dataList;
-          _queryError = null;
-        });
-      } else {
-        print('Error fetching search results: ${response.body}');
-        setState(() {
-          _queryError = 'Error fetching search results: ${response.reasonPhrase}';
-        });
-      }
-    } catch (error) {
-      print('Error fetching search results: $error');
-      setState(() {
-        _queryError = error.toString();
-      });
-    }
+  @override
+  void initState() {
+    super.initState();
+    _fetchInitialData();
+    _searchController.addListener(() {
+      _filterData(_searchController.text);
+    });
   }
 
-void _showCreateDialog() {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return DynamicTableCreateDialog(
-        userId: widget.userId,
-        apiHost: widget.apiHost,
-        modal: widget.modal,
-        columns: widget.readFields,
-        options: widget.options,
-        conditionalOptions: widget.conditionalOptions,
-        validationRules: widget.validationRules,
-        aiQualityChecks: widget.aiQualityChecks,
-        openAiJsonModeModel: widget.openAiJsonModeModel,
-        openAiApiKey: widget.openAiApiKey,
-      );
-    },
-  ).then((result) {
-    if (result == true) {
-      // Reload data if the create dialog returns success
-      fetchData(widget.apiHost, widget.modal, widget.route).then((data) {
-        setState(() {
-          _searchData = data;
-        });
-      });
-    }
-  });
-}
+  Future<void> _fetchInitialData() async {
+    List<Map<String, dynamic>> data = await fetchData(widget.apiHost, widget.modal, widget.route);
+    setState(() {
+      _originalData = data;
+      _filteredData = data;
+    });
+  }
 
+  void _filterData(String queryInput) {
+    String query = queryInput.trim().toLowerCase();
+    if (query.isEmpty) {
+      setState(() {
+        _filteredData = _originalData;
+      });
+      return;
+    }
+
+    setState(() {
+      _filteredData = _originalData.where((row) {
+        return row.values.any((value) {
+          if (value == null) return false;
+          return value.toString().toLowerCase().contains(query);
+        });
+      }).toList();
+    });
+  }
+
+  void _showCreateDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return DynamicTableCreateDialog(
+          userId: widget.userId,
+          apiHost: widget.apiHost,
+          modal: widget.modal,
+          columns: widget.readFields,
+          options: widget.options,
+          conditionalOptions: widget.conditionalOptions,
+          validationRules: widget.validationRules,
+          aiQualityChecks: widget.aiQualityChecks,
+          openAiJsonModeModel: widget.openAiJsonModeModel,
+          openAiApiKey: widget.openAiApiKey,
+        );
+      },
+    ).then((result) {
+      if (result == true) {
+        // Reload data if the create dialog returns success
+        _fetchInitialData();
+      }
+    });
+  }
 
   void _showSearchDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String queryInput = '';
         return AlertDialog(
           title: Text('Search', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.black,
           content: TextField(
+            controller: _searchController,
             onChanged: (value) {
-              queryInput = value;
+              _filterData(value);
             },
             style: TextStyle(color: Colors.white),
             decoration: InputDecoration(
@@ -182,21 +168,6 @@ void _showCreateDialog() {
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              child: Text('Cancel', style: TextStyle(color: Colors.white)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Search', style: TextStyle(color: Colors.white)),
-              onPressed: () {
-                handleSearchSubmit(widget.apiHost, widget.modal, queryInput);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
@@ -218,11 +189,12 @@ void _showCreateDialog() {
                 route: widget.route,
                 create: widget.create,
                 readFields: widget.readFields,
+                readSummaryFields: widget.readSummaryFields,
                 updateFields: widget.updateFields,
                 delete: widget.delete,
-                searchData: _searchData,
+                searchData: _filteredData,
                 queryError: _queryError,
-                handleSearchSubmit: handleSearchSubmit,
+                handleSearchSubmit: _filterData,
 
                 userId: widget.userId,
                 columns: widget.readFields,
@@ -238,7 +210,7 @@ void _showCreateDialog() {
           ],
         ),
       ),
-      bottomNavigationBar: widget.create 
+      bottomNavigationBar: widget.create
         ? BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) {

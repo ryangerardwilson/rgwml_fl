@@ -8,6 +8,7 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
   final List<Map<String, dynamic>> data;
   final bool create;
   final List<String> readFields;
+  final List<String> readSummaryFields;
   final List<String> updateFields;
   final bool delete;
   final VoidCallback onDeleteItem;
@@ -26,6 +27,7 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
     required this.modal,
     required this.data,
     required this.readFields,
+    required this.readSummaryFields,
     required this.updateFields,
     required this.create,
     required this.delete,
@@ -99,10 +101,10 @@ class DataList extends StatelessWidget { // Note: This is now StatelessWidget
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (int i = 0; i < readFields.length; i++)
-                    if (i < 5 || i >= readFields.length - 2)
+                  for (int i = 0; i < readSummaryFields.length; i++)
+                    if (i < 5 || i >= readSummaryFields.length - 2)
                       Text(
-                        '${readFields[i]}: ${data[index][readFields[i]]}',
+                        '${readSummaryFields[i]}: ${data[index][readSummaryFields[i]]}',
                         style: TextStyle(color: Colors.white),
                       ),
                 ],

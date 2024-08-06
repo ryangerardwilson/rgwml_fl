@@ -86,12 +86,14 @@ class ConditionalOption {
 class Scopes {
   final bool create;
   final List<String> read;
+  final List<String> read_summary;
   final List<String> update;
   final bool delete;
 
   Scopes({
     required this.create,
     required this.read,
+    required this.read_summary,
     required this.update,
     required this.delete,
   });
@@ -99,6 +101,7 @@ class Scopes {
   Map<String, dynamic> toJson() => {
     'create': create,
     'read': read,
+    'read_summary': read_summary,
     'update': update,
     'delete': delete,
   };
