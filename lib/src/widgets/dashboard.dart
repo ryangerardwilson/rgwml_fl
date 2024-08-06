@@ -42,16 +42,18 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
   bool _isSettingsDialogOpen = false;
   String? _username;
   String? _userId;
+  String? _userType;
   bool _isAuthenticated = false;
 
   @override
   void initState() {
     super.initState();
-    checkAuthentication(context, widget, onAuthentication: (username, userId) {
+    checkAuthentication(context, widget, onAuthentication: (username, userId, userType) {
       if (mounted) {
         setState(() {
           _username = username;
           _userId = userId;
+          _userType = userType;
           _isAuthenticated = true;
         });
       }
@@ -156,6 +158,7 @@ class _CRMDashboardState extends State<CRMDashboard> with DashboardUtils {
       context: context,
       username: _username ?? 'N/A',
       userId: _userId ?? 'N/A',
+      userType: _userType ?? 'N/A',
       currentVersion: widget.currentVersion,
       updateAvailable: _updateAvailable,
       latestVersion: _latestVersion,

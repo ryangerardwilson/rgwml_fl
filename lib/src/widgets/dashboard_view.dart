@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dynamic_table.dart'; 
+import 'dynamic_table.dart';
 import 'modal_config.dart';
 
 class DashboardView extends StatefulWidget {
@@ -56,12 +56,15 @@ class _DashboardViewState extends State<DashboardView> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _userType = prefs.getString('user_type');
+      //print('Loaded user type: $_userType'); // Debug print
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final modalKeys = widget.modalConfig.configs.keys.toList();
+
+    //print('Building DashboardView with user type: $_userType'); // Debug print
 
     return Scaffold(
       key: widget.scaffoldKey,
@@ -90,8 +93,11 @@ class _DashboardViewState extends State<DashboardView> {
                 itemCount: modalKeys.length,
                 itemBuilder: (context, index) {
                   final modalKey = modalKeys[index];
+                  //print('Checking modal key: $modalKey for user type: $_userType'); // Debug print
+
                   // Do not display the 'users' modal if the user type is 'normal'
                   if (modalKey == 'users' && _userType == 'normal') {
+                    //print('Hiding modal key: $modalKey for user type: $_userType'); // Debug print
                     return SizedBox.shrink();
                   }
                   final modal = widget.modalConfig.configs[modalKey];
@@ -141,79 +147,77 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<String> routes) {
-  return AlertDialog(
-    backgroundColor: Colors.black,  // Set dialog background color
-    title: Text(
-      'Select filter for $modalKey',
-      style: TextStyle(color: Colors.white),
-    ),
-    content: Container(
-      width: double.maxFinite,
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: routes.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[850],  // Set button background color
-              ),
-              onPressed: () {
-                setState(() {
-                  _selectedReadRoute[modalKey] = routes[index];
-                });
-                Navigator.of(context).pop();
+  Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<String> routes) {
+    return AlertDialog(
+      backgroundColor: Colors.black,  // Set dialog background color
+      title: Text(
+        'Select filter for $modalKey',
+        style: TextStyle(color: Colors.white),
+      ),
+      content: Container(
+        width: double.maxFinite,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: routes.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[850],  // Set button background color
+                ),
+                onPressed: () {
+                  setState(() {
+                    _selectedReadRoute[modalKey] = routes[index];
+                  });
+                  Navigator.of(context).pop();
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Scaffold(
-                      appBar: AppBar(
-                        title: Text(
-                          modalKey,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                        appBar: AppBar(
+                          title: Text(
+                            modalKey,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
+                          backgroundColor: Colors.black,
+                          iconTheme: IconThemeData(color: Colors.grey[300]),
                         ),
-                        backgroundColor: Colors.black,
-                        iconTheme: IconThemeData(color: Colors.grey[300]),
-                      ),
-                      body: DynamicTable(
-                        userId: widget.userId,
-                        apiHost: widget.apiHost,
-                        modal: modalKey,
-                        route: _selectedReadRoute[modalKey] ?? '',
-                        create: widget.modalConfig.configs[modalKey]!.scopes.create,
-                        readFields: widget.modalConfig.configs[modalKey]!.scopes.read,
-                        readSummaryFields: widget.modalConfig.configs[modalKey]!.scopes.read_summary,
-                        updateFields: widget.modalConfig.configs[modalKey]!.scopes.update,
-                        delete: widget.modalConfig.configs[modalKey]!.scopes.delete,
-                        options: widget.modalConfig.configs[modalKey]!.options,
-                        conditionalOptions: widget.modalConfig.configs[modalKey]!.conditionalOptions,
-                        validationRules: widget.modalConfig.configs[modalKey]!.validationRules,
-                        aiQualityChecks: widget.modalConfig.configs[modalKey]!.aiQualityChecks,
-                        openAiJsonModeModel: widget.openAiJsonModeModel,
-                        openAiApiKey: widget.openAiApiKey
+                        body: DynamicTable(
+                          userId: widget.userId,
+                          apiHost: widget.apiHost,
+                          modal: modalKey,
+                          route: _selectedReadRoute[modalKey] ?? '',
+                          create: widget.modalConfig.configs[modalKey]!.scopes.create,
+                          readFields: widget.modalConfig.configs[modalKey]!.scopes.read,
+                          readSummaryFields: widget.modalConfig.configs[modalKey]!.scopes.read_summary,
+                          updateFields: widget.modalConfig.configs[modalKey]!.scopes.update,
+                          delete: widget.modalConfig.configs[modalKey]!.scopes.delete,
+                          options: widget.modalConfig.configs[modalKey]!.options,
+                          conditionalOptions: widget.modalConfig.configs[modalKey]!.conditionalOptions,
+                          validationRules: widget.modalConfig.configs[modalKey]!.validationRules,
+                          aiQualityChecks: widget.modalConfig.configs[modalKey]!.aiQualityChecks,
+                          openAiJsonModeModel: widget.openAiJsonModeModel,
+                          openAiApiKey: widget.openAiApiKey
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-              child: Text(
-                routes[index],
-                style: TextStyle(color: Colors.white),  // Set text color to white
+                  );
+                },
+                child: Text(
+                  routes[index],
+                  style: TextStyle(color: Colors.white),  // Set text color to white
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
-    ),
-  );
-}
-
-
+    );
+  }
 }
 

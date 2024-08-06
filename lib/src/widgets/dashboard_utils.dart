@@ -90,7 +90,7 @@ mixin DashboardUtils {
 
   Future<void> checkAuthentication(
     BuildContext context, dynamic widget,
-    {required Function(String username, String userId) onAuthentication}
+    {required Function(String username, String userId, String userType) onAuthentication}
   ) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isAuthenticated = prefs.getBool('auth') ?? false;
@@ -114,6 +114,7 @@ mixin DashboardUtils {
       onAuthentication(
         prefs.getString('username') ?? '',
         prefs.getString('user_id') ?? '',
+        prefs.getString('user_type') ?? '',
       );
     }
   }
@@ -122,6 +123,7 @@ mixin DashboardUtils {
     required BuildContext context,
     required String username,
     required String userId,
+    required String userType, 
     required String currentVersion,
     required bool updateAvailable,
     required String latestVersion,
@@ -136,6 +138,7 @@ mixin DashboardUtils {
         return SettingsDialog(
           username: username,
           userId: userId,
+          userType: userType,
           currentVersion: currentVersion,
           updateAvailable: updateAvailable,
           latestVersion: latestVersion,

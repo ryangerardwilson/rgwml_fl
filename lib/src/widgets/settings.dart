@@ -6,6 +6,7 @@ import 'dart:async';
 class SettingsDialog extends StatefulWidget {
   final String username;
   final String userId;
+  final String userType;
   final String currentVersion;
   final bool updateAvailable;
   final String latestVersion;
@@ -17,6 +18,7 @@ class SettingsDialog extends StatefulWidget {
   SettingsDialog({
     required this.username,
     required this.userId,
+    required this.userType,
     required this.currentVersion,
     required this.updateAvailable,
     required this.latestVersion,
@@ -65,7 +67,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async => false,
-      // Prevent back button press regardless of update availability
       child: AlertDialog(
         backgroundColor: Colors.grey[900],
         title: Text(
@@ -83,6 +84,11 @@ class _SettingsDialogState extends State<SettingsDialog> {
               SizedBox(height: 8),
               Text(
                 'User ID: ${widget.userId}',
+                style: TextStyle(color: Colors.white70),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'User Type: ${widget.userType}',
                 style: TextStyle(color: Colors.white70),
               ),
               SizedBox(height: 8),
@@ -126,7 +132,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
         ),
         actions: <Widget>[
           Row(
-            mainAxisAlignment: MainAxisAlignment.center, // Align to the center
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.isAuthenticated)
                 ElevatedButton(
@@ -139,7 +145,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     backgroundColor: Colors.black,
                   ),
                 ),
-              if (widget.isAuthenticated) // Space between buttons
+              if (widget.isAuthenticated)
                 SizedBox(width: 16),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
