@@ -5,14 +5,19 @@ import 'dynamic_table_searchable_data_view.dart';
 import 'dynamic_table_create_dialog.dart';
 import 'modal_config.dart';
 
-Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, String route) async {
-  final apiUrl = apiHost + 'read/$modal/$route';
+Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, String route, bool belongsToUserId, String userId) async {
+  final apiUrl = belongsToUserId 
+      ? (apiHost + 'read/$modal/$route/$userId') 
+      : (apiHost + 'read/$modal/$route');
 
   try {
+    print(apiUrl);
     final response = await http.get(Uri.parse(apiUrl));
+    print(response);
 
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
+      print(result);
 
       if (result.containsKey('columns') && result.containsKey('data')) {
         List<String> columns = List<String>.from(result['columns']);
@@ -21,7 +26,7 @@ Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, Strin
         List<Map<String, dynamic>> dataList = data.map((row) {
           return Map<String, dynamic>.fromIterables(columns, row);
         }).toList();
-        
+
         return dataList;
       } else {
         throw Exception('Unexpected API Response format');
@@ -40,6 +45,7 @@ class DynamicTable extends StatefulWidget {
   final String apiHost;
   final String modal;
   final String route;
+  final bool belongsToUserId;
   final bool create;
   final List<String> readFields;
   final List<String> readSummaryFields;
@@ -57,6 +63,7 @@ class DynamicTable extends StatefulWidget {
     required this.apiHost,
     required this.modal,
     required this.route,
+    required this.belongsToUserId,
     required this.create,
     required this.readFields,
     required this.readSummaryFields,
@@ -90,7 +97,7 @@ class _DynamicTableState extends State<DynamicTable> {
   }
 
   Future<void> _fetchInitialData() async {
-    List<Map<String, dynamic>> data = await fetchData(widget.apiHost, widget.modal, widget.route);
+    List<Map<String, dynamic>> data = await fetchData(widget.apiHost, widget.modal, widget.route, widget.belongsToUserId, widget.userId);
     setState(() {
       _originalData = data;
       _filteredData = data;

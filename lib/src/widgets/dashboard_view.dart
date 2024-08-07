@@ -43,7 +43,7 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-  Map<String, String?> _selectedReadRoute = {};
+  Map<String, ReadRouteConfig?> _selectedReadRoute = {};
   String? _userType;
 
   @override
@@ -107,7 +107,7 @@ class _DashboardViewState extends State<DashboardView> {
                       onTap: () {
                         setState(() {
                           _selectedReadRoute[modalKey] = modal.readRoutes.isNotEmpty
-                              ? modal.readRoutes[0]
+                              ? modal.readRoutes.values.first
                               : null;
                         });
 
@@ -147,7 +147,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, List<String> routes) {
+  Widget _buildRouteSelectionDialog(BuildContext context, String modalKey, Map<String, ReadRouteConfig> routes) {
     return AlertDialog(
       backgroundColor: Colors.black,  // Set dialog background color
       title: Text(
@@ -160,6 +160,9 @@ class _DashboardViewState extends State<DashboardView> {
           shrinkWrap: true,
           itemCount: routes.length,
           itemBuilder: (context, index) {
+            final routeName = routes.keys.elementAt(index);
+            final routeConfig = routes[routeName];
+
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4.0),
               child: ElevatedButton(
@@ -168,7 +171,7 @@ class _DashboardViewState extends State<DashboardView> {
                 ),
                 onPressed: () {
                   setState(() {
-                    _selectedReadRoute[modalKey] = routes[index];
+                    _selectedReadRoute[modalKey] = routeConfig;
                   });
                   Navigator.of(context).pop();
 
@@ -191,7 +194,9 @@ class _DashboardViewState extends State<DashboardView> {
                           userId: widget.userId,
                           apiHost: widget.apiHost,
                           modal: modalKey,
-                          route: _selectedReadRoute[modalKey] ?? '',
+                          route: routeName,
+                          //belongsToUserId: routeConfig.belongsToUserId,
+                          belongsToUserId: routeConfig?.belongsToUserId ?? false,
                           create: widget.modalConfig.configs[modalKey]!.scopes.create,
                           readFields: widget.modalConfig.configs[modalKey]!.scopes.read,
                           readSummaryFields: widget.modalConfig.configs[modalKey]!.scopes.read_summary,
@@ -209,7 +214,7 @@ class _DashboardViewState extends State<DashboardView> {
                   );
                 },
                 child: Text(
-                  routes[index],
+                  routeName,
                   style: TextStyle(color: Colors.white),  // Set text color to white
                 ),
               ),

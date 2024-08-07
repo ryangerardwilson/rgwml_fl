@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class ModalConfigMap {
   final Map<String, ModalConfig> configs;
 
@@ -8,13 +10,12 @@ class ModalConfigMap {
   };
 }
 
-
 class ModalConfig {
   final Options options;
   final Map<String, List<ConditionalOption>> conditionalOptions;
   final Scopes scopes;
   final Map<String, List<String>> validationRules;
-  final List<String> readRoutes;
+  final Map<String, ReadRouteConfig> readRoutes;
   final dynamic aiQualityChecks;
 
   ModalConfig({
@@ -31,12 +32,26 @@ class ModalConfig {
     'conditionalOptions': conditionalOptions.map((key, value) => MapEntry(key, value.map((e) => e.toJson()).toList())),
     'scopes': scopes.toJson(),
     'validationRules': validationRules,
-    'readRoutes': readRoutes,
+    'readRoutes': readRoutes.map((key, value) => MapEntry(key, value.toJson())),
     'aiQualityChecks': aiQualityChecks,
   };
 }
 
+class ReadRouteConfig {
+  final bool belongsToUserId;
 
+  ReadRouteConfig({required this.belongsToUserId});
+
+  factory ReadRouteConfig.fromJson(Map<String, dynamic> json) {
+    return ReadRouteConfig(
+      belongsToUserId: json['belongs_to_user_id'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'belongs_to_user_id': belongsToUserId,
+  };
+}
 
 class Options {
   final Map<String, List<String>> xorOptions;
@@ -65,8 +80,6 @@ class Options {
     'orOptions': orOptions,
   };
 }
-
-
 
 class ConditionalOption {
   final String condition;
