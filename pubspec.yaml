@@ -1,6 +1,6 @@
 name: rgwml_fl
 description: A package for the RGWML techstack
-version: 0.0.43
+version: 0.0.44
 homepage: https://github.com/ryangerardwilson/rgwml_fl.git
 
 environment:
