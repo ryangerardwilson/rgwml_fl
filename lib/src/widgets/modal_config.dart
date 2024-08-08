@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class ModalConfigMap {
   final Map<String, ModalConfig> configs;
 
