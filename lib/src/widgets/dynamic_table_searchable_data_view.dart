@@ -8,6 +8,7 @@ class SearchableDataView extends StatefulWidget {
   final String apiHost;
   final String modal;
   final String route;
+  final bool belongsToUserId;
   final bool create;
   final List<String> readFields;
   final List<String> readSummaryFields;
@@ -31,6 +32,7 @@ class SearchableDataView extends StatefulWidget {
     required this.apiHost,
     required this.modal,
     required this.route,
+    required this.belongsToUserId,
     required this.create,
     required this.readFields,
     required this.readSummaryFields,
@@ -61,42 +63,49 @@ class _SearchableDataViewState extends State<SearchableDataView> {
   @override
   void initState() {
     super.initState();
-    _fetchDataFuture = fetchData();
+    _fetchDataFuture = fetchData(widget.apiHost, widget.modal, widget.route, widget.belongsToUserId, widget.userId);
   }
 
-  Future<List<Map<String, dynamic>>> fetchData() async {
-    final apiUrl = '${widget.apiHost}read/${widget.modal}/${widget.route}';
-    //print('API URL: $apiUrl');
+Future<List<Map<String, dynamic>>> fetchData(String apiHost, String modal, String route, bool belongsToUserId, String userId) async {
+  final apiUrl = belongsToUserId
+      ? (apiHost + 'read/$modal/$route/$userId')
+      : (apiHost + 'read/$modal/$route');
 
-    try {
-      final response = await http.get(Uri.parse(apiUrl));
-      //print('API Response: ${response.statusCode} - ${response.body}');
+  try {
+    print(apiUrl);
+    final response = await http.get(Uri.parse(apiUrl));
+    print(response);
 
-      if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      print(result);
 
-        if (result.containsKey('columns') && result.containsKey('data')) {
-          List<String> columns = List<String>.from(result['columns']);
-          List<List<dynamic>> data = List<List<dynamic>>.from(result['data']);
+      if (result.containsKey('columns') && result.containsKey('data')) {
+        List<String> columns = List<String>.from(result['columns']);
+        List<List<dynamic>> data = List<List<dynamic>>.from(result['data']);
 
-          return data.map((row) {
-            return Map<String, dynamic>.fromIterables(columns, row);
-          }).toList();
-        } else {
-          throw Exception('Unexpected API Response format');
-        }
+        List<Map<String, dynamic>> dataList = data.map((row) {
+          return Map<String, dynamic>.fromIterables(columns, row);
+        }).toList();
+
+        return dataList;
       } else {
-        throw Exception('Failed to load data');
+        throw Exception('Unexpected API Response format');
       }
-    } catch (e) {
-      print('Error: $e');
-      return [];
+    } else {
+      throw Exception('Failed to load data');
     }
+  } catch (e) {
+    print('Error: $e');
+    return [];
   }
+}
+
+
 
   void _refreshData() {
     setState(() {
-      _fetchDataFuture = fetchData();
+      _fetchDataFuture = fetchData(widget.apiHost, widget.modal, widget.route, widget.belongsToUserId, widget.userId);
     });
   }
 

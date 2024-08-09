@@ -194,6 +194,7 @@ class _DynamicTableState extends State<DynamicTable> {
                 apiHost: widget.apiHost,
                 modal: widget.modal,
                 route: widget.route,
+                belongsToUserId: widget.belongsToUserId,
                 create: widget.create,
                 readFields: widget.readFields,
                 readSummaryFields: widget.readSummaryFields,
