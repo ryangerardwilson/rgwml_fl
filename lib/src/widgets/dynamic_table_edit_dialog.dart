@@ -58,8 +58,8 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
 
   Future<void> checkAndFetchLocation() async {
     bool requiresLocation = widget.columns.any((column) =>
-        column.endsWith('_android_latitude') ||
-        column.endsWith('_android_longitude'));
+        column.endsWith('device_latitude') ||
+        column.endsWith('device_longitude'));
 
     if (requiresLocation) {
       try {
@@ -92,9 +92,9 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
         
         setState(() {
           widget.columns.forEach((column) {
-            if (column.endsWith('_android_latitude')) {
+            if (column.endsWith('device_latitude')) {
               _formData[column] = _locationData.latitude?.toString() ?? '0';
-            } else if (column.endsWith('_android_longitude')) {
+            } else if (column.endsWith('device_longitude')) {
               _formData[column] = _locationData.longitude?.toString() ?? '0';
             }
           });
@@ -195,8 +195,8 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
   }
 
   Widget _buildTextFormField(String column) {
-    bool isAndroidLatitudeField = column.endsWith('_android_latitude');
-    bool isAndroidLongitudeField = column.endsWith('_android_longitude');
+    bool isAndroidLatitudeField = column.endsWith('device_latitude');
+    bool isAndroidLongitudeField = column.endsWith('device_longitude');
 
     if (isAndroidLatitudeField || isAndroidLongitudeField) {
       return _buildNonEditableField(column);
@@ -276,11 +276,11 @@ class _DynamicTableEditDialogState extends State<DynamicTableEditDialog> {
 
   List<Widget> _buildFormFields() {
     return widget.columns.where((column) => 
-        column.endsWith('_android_latitude') ||
-        column.endsWith('_android_longitude') ||
+        column.endsWith('device_latitude') ||
+        column.endsWith('device_longitude') ||
         widget.updateFields.contains(column)
     ).map((column) {
-      if (column.endsWith('_android_latitude') || column.endsWith('_android_longitude')) {
+      if (column.endsWith('device_latitude') || column.endsWith('device_longitude')) {
         return _buildNonEditableField(column);
       }
 
